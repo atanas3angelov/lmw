@@ -1,0 +1,84 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Translations for {{ word.word_text }} {% endblock %}
+
+{% block content %}
+
+{% load static %}
+<style>
+    .male {background-color:rgb(0,0,200);}
+    .female {background-color:rgb(255,0,0);}
+    .neutral {background-color:rgb(125,125,125);}
+</style>
+
+<p>
+    <b>{{ word.word_text }}</b>
+    <button type="button" onclick="window.location=&#39;{% url 'dictionary:edit_word_form' lang=lang word_id=word.id %}&#39;">Edit</button>
+</p>
+<p>word type: {{ word.word_type }}</p>
+<p>
+    gender:
+        {% if word.gender == 'm' %}
+            <span class="male">male</span>
+        {% elif word.gender == 'f' %}
+            <span class="female">female</span>
+        {% elif word.gender == 'n' %}
+            <span class="neutral">neutral</span>
+        {% else %}
+            <span class="none">none</span>
+        {% endif %}
+</p>
+<p>
+    {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
+        <audio id="{{ word.pronunciation }}">
+            <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg">
+        </audio>
+        <button type="button" onclick="document.getElementById('{{ word.pronunciation }}').play()">
+            <img src="{% static 'dictionary/audio.jpg' %}" height="30">
+        </button>
+    {% endif %}
+</p>
+
+{% if synonyms %}
+    <fieldset>
+        <legend>synonyms</legend>
+            <ul>
+                {% for synonym in synonyms %}
+                    <li>
+                        {{ synonym.word_text }}
+                        {% if synonym.pronunciation and synonym.pronunciation|slice:'-3:' == 'mp3' %}
+                            <br>
+                            <audio id="{{ synonym.pronunciation }}">
+                                <source src="{% static 'dictionary/files/' %}{{ synonym.pronunciation }}" type="audio/mpeg">
+                            </audio>
+                            <button type="button" onclick="document.getElementById('{{ synonym.pronunciation }}').play()">
+                                <img src="{% static 'dictionary/audio.jpg' %}" height="30">
+                            </button>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+    </fieldset>
+{% endif %}
+
+<fieldset id="translations">
+    <legend>translations</legend>
+        <ul>
+            {% for translation in translations %}
+                <li>
+                    {{ translation.word_text }}
+                    {% if translation.pronunciation and translation.pronunciation|slice:'-3:' == 'mp3' %}
+                        <audio id="{{ translation.pronunciation }}">
+                            <source src="{% static 'dictionary/files/' %}{{ translation.pronunciation }}" type="audio/mpeg">
+                        </audio>
+                        <br>
+                        <button type="button" onclick="document.getElementById('{{ translation.pronunciation }}').play()">
+                            <img src="{% static 'dictionary/audio.jpg' %}" height="30">
+                        </button>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+</fieldset>
+
+{% endblock %}

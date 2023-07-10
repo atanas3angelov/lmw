@@ -1,0 +1,103 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Adding a new word {% endblock %}
+
+{% block content %}
+<style>
+    .male {background-color:rgb(0,0,200);}
+    .female {background-color:rgb(255,0,0);}
+    .neutral {background-color:rgb(125,125,125);}
+</style>
+
+<script type="text/javascript">
+    function addMoreTranslationFields() {
+        var count = document.getElementById("translation_count").value;
+        count++;
+        document.getElementById("translation_count").setAttribute("value", count);
+
+        translations_container = document.getElementById("translations");
+
+        var another_translation_text_label = createLabel("translation_text"+count, "word text:");
+        translations_container.appendChild(another_translation_text_label);
+
+        var another_translation_text_input = createInput("text", "translation_text"+count);
+        translations_container.appendChild(another_translation_text_input);
+        translations_container.appendChild(document.createElement("br"));
+
+        var another_translation_pronunciation_label = createLabel("translation_pronunciation"+count, "pronunciation:");
+        translations_container.appendChild(another_translation_pronunciation_label);
+
+        var another_translation_pronunciation_input = createInput("file", "translation_pronunciation"+count);
+        translations_container.appendChild(another_translation_pronunciation_input);
+        translations_container.appendChild(document.createElement("br"));
+    }
+
+    function createLabel(for_id, innerHTML) {
+        var label = document.createElement("label");
+        label.setAttribute("for", for_id);
+        label.innerHTML = innerHTML;
+        return label;
+    }
+
+    function createInput(type, id) {
+        var input = document.createElement("input");
+        input.type = type;
+        input.id = id;
+        input.name = id;
+        return input;
+    }
+
+</script>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'dictionary:words' lang=lang %}" method="post" enctype="multipart/form-data">
+    <fieldset id="synonyms">
+        <legend>{{ lang }}</legend>
+        <label for="word_text">word text:</label>
+        <input type="text" name="word_text" id="word_text" required>
+        <br>
+
+        <label for="word_type">word type:</label>
+        <select name="word_type" id="word_type">
+            <option value="n">noun</option>
+            <option value="v">verb</option>
+            <option value="adj">adjective</option>
+            <option value="adv">adverb</option>
+            <option value="con">conjunction</option>
+            <option value="other" selected>other</option>
+        </select>
+        <br>
+
+        <label for="gender">gender:</label>
+        <select name="gender" id="gender">
+            <option value="na" class="none" selected>none</option>
+            <option value="m" class="male">male</option>
+            <option value="f" class="female">female</option>
+            <option value="n" class="neutral" selected>neutral</option>
+        </select>
+        <br>
+
+        <label for="pronunciation">pronunciation:</label>
+        <input type="file" name="pronunciation" id="pronunciation">
+
+    </fieldset>
+    <fieldset id="translations">
+        <legend>translation</legend>
+        <label for="translation_text1">word text:</label>
+        <input type="text" name="translation_text1" id="translation_text1" required>
+        <br>
+
+        <label for="translation_pronunciation1">pronunciation:</label>
+        <input type="file" name="translation_pronunciation1" id="translation_pronunciation1">
+        <br>
+
+        <button type="button" onclick="addMoreTranslationFields()">More translations</button>
+        <br>
+        <input type="hidden" id="translation_count" name="translation_count" value="1">
+    </fieldset>
+
+    {% csrf_token %}
+    <input type="submit" value="Add translation">
+</form>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %}Dictionary for {{ lang }}{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+<style>
+    .male {background-color:rgb(0,0,200);}
+    .female {background-color:rgb(255,0,0);}
+    .neutral {background-color:rgb(125,125,125);}
+</style>
+
+<script type="text/javascript">
+    function deleteWord(url, word_id) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const request = new Request(
+            url,
+            {
+                method: 'DELETE',
+                headers: {'X-CSRFToken': csrftoken},
+                mode: 'same-origin' // Do not send CSRF token to another domain.
+            }
+        );
+        fetch(request).then(function(response) {
+            location.reload();
+        });
+    }
+</script>
+
+<table>
+    <tr>
+        <th>word</th>
+        <th>gender</th>
+        <th></th>
+    </tr>
+    {% for word in words %}
+        <tr>
+            <td>
+                <a href="{% url 'dictionary:word' lang=lang word_id=word.id %}">
+                    {{ word.word_text }}
+                </a>
+            </td>
+                {% if word.gender == 'm' %}
+                    <td class="male"></td>
+                {% elif word.gender == 'f'%}
+                    <td class="female"></td>
+                {% elif word.gender == 'n'%}
+                    <td class="neutral"></td>
+                {% else %}
+                    <td class="none"></td>
+                {% endif %}
+            <td>
+                <button type="button" onclick="deleteWord(&#39;{% url 'dictionary:word' lang=lang word_id=word.id %}&#39;)">Delete</button>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
