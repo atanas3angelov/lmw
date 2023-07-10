@@ -8,7 +8,7 @@ run app by typing (in project's lmw dir containing manage.py):
 - python manage.py runserver  
 open localhost:8000/dictionary in browser
 
-programming language: Python + Django - see requirements.txt
+programming language: Python + Django - see requirements.txt  
 IDE: PyCharm Community
 
 Target OS: Windows
