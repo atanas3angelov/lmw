@@ -1,0 +1,41 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %}Languages{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+<script>
+    function deleteLanguage(url) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const request = new Request(
+            url,
+            {
+                method: 'DELETE',
+                headers: {'X-CSRFToken': csrftoken},
+                mode: 'same-origin' // Do not send CSRF token to another domain.
+            }
+        );
+        fetch(request).then(function(response) {
+            location.reload();
+        });
+    }
+</script>
+
+<ul>
+    {% for language in languages %}
+        <li>
+            {{ language.name }}
+            <button onclick="deleteLanguage(&#39;{% url 'dictionary:delete_language' language_id=language.id %}&#39;)">Delete</button>
+        </li>
+    {% endfor %}
+    <li>
+        <form method="post" action="{% url 'dictionary:languages' %}">
+            <input type="text" name="language">
+            <button type="submit">Add</button>
+            {% csrf_token %}
+        </form>
+    </li>
+</ul>
+
+{% endblock %}

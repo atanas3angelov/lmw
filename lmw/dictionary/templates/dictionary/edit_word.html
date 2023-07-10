@@ -1,0 +1,220 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Editing {{ word.word_text }} {% endblock %}
+
+{% block content %}
+
+{% load static %}
+<style>
+    .male {background-color:rgb(0,0,200);}
+    .female {background-color:rgb(255,0,0);}
+    .neutral {background-color:rgb(125,125,125);}
+</style>
+
+<script type="text/javascript">
+
+    function playAudio(audio_id) {
+        document.getElementById(audio_id).play();
+    }
+    function changeAudio(file_input_id, img_src_id) {
+        document.getElementById(file_input_id).click();
+        document.getElementById(img_src_id).setAttribute("src", '{% static 'dictionary/audio.jpg' %}');
+    }
+
+    function deleteAudio(delete_audio_id, img_src_id) {
+        document.getElementById(delete_audio_id).setAttribute('value', '1');
+        document.getElementById(img_src_id).setAttribute("src", '{% static 'dictionary/no_audio.jpg' %}');
+    }
+
+    function deleteWord(word_id, hidden_input_id, li_id) {
+        document.getElementById(hidden_input_id).setAttribute("value", [word_id]);
+        document.getElementById(li_id).remove();
+    }
+
+    function addMoreFields(id_prefix, container_id) {
+        var count = document.getElementById(id_prefix+"_count").value;
+        count++;
+        document.getElementById(id_prefix+"_count").setAttribute("value", count);
+
+        container = document.getElementById(container_id);
+
+        var label = createLabel(id_prefix+"_text"+count, "word text:");
+        container.appendChild(label);
+
+        var text_input = createInput("text", id_prefix+"_text"+count);
+        container.appendChild(text_input);
+        container.appendChild(document.createElement("br"));
+
+        var pronunciation_label = createLabel(id_prefix+"_pronunciation"+count, "pronunciation:");
+        container.appendChild(pronunciation_label);
+
+        var pronunciation_input = createInput("file", id_prefix+"_pronunciation"+count);
+        container.appendChild(pronunciation_input);
+        container.appendChild(document.createElement("br"));
+    }
+
+    function createLabel(for_id, innerHTML) {
+        var label = document.createElement("label");
+        label.setAttribute("for", for_id);
+        label.innerHTML = innerHTML;
+        return label;
+    }
+
+    function createInput(type, id) {
+        var input = document.createElement("input");
+        input.type = type;
+        input.id = id;
+        input.name = id;
+        return input;
+    }
+
+</script>
+
+
+<form action="{% url 'dictionary:word' lang=lang word_id=word.id %}" method="post" enctype="multipart/form-data">
+    <p>
+        <input type="text" id="word_text" name="word_text" value="{{ word.word_text }}">
+        <button type="submit">Save</button>
+    </p>
+    <p>
+        <label for="word_type">word type:</label>
+        <select name="word_type" id="word_type">
+            {% if word.word_type == "n" %}
+                <option value="n" selected>noun</option>
+            {% else %}
+                <option value="n">noun</option>
+            {% endif %}
+            {% if word.word_type == "v" %}
+                <option value="v" selected>verb</option>
+            {% else %}
+                <option value="v">verb</option>
+            {% endif %}
+            {% if word.word_type == "adj" %}
+                <option value="adj" selected>adjective</option>
+            {% else %}
+                <option value="adj">adjective</option>
+            {% endif %}
+            {% if word.word_type == "adv" %}
+                <option value="adv" selected>adverb</option>
+            {% else %}
+                <option value="adv">adverb</option>
+            {% endif %}
+            {% if word.word_type == "con" %}
+                <option value="con" selected>conjunction</option>
+            {% else %}
+                <option value="con">conjunction</option>
+            {% endif %}
+            {% if word.word_type == "other" %}
+                <option value="other" selected>other</option>
+            {% else %}
+                <option value="other">other</option>
+            {% endif %}
+        </select>
+    </p>
+    <p>
+        <label for="gender">gender:</label>
+        <select name="gender" id="gender">
+            {% if word.gender == "na" %}
+                <option value="na"  class="none" selected>none</option>
+            {% else %}
+                <option value="na"  class="none">none</option>
+            {% endif %}
+            {% if word.gender == "m" %}
+                <option value="m"  class="male" selected>male</option>
+            {% else %}
+                <option value="m"  class="male">male</option>
+            {% endif %}
+            {% if word.gender == "f" %}
+                <option value="f"  class="female" selected>female</option>
+            {% else %}
+                <option value="f"  class="female">female</option>
+            {% endif %}
+            {% if word.gender == "n" %}
+                <option value="n"  class="neutral" selected>neutral</option>
+            {% else %}
+                <option value="n"  class="neutral">neutral</option>
+            {% endif %}
+        </select>
+    </p>
+    <p>
+        {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
+            <audio id="{{ word.pronunciation }}">
+                <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg">
+            </audio>
+        {% endif %}
+        <button type="button" onclick="playAudio('{{ word.pronunciation }}')">
+            {% if word.pronunciation %}
+                <img id="pronunciation_img" src="{% static 'dictionary/audio.jpg' %}" height="30">
+            {% else %}
+                <img id="pronunciation_img" src="{% static 'dictionary/no_audio.jpg' %}" height="30">
+            {% endif %}
+        </button>
+
+        <button type="button" onclick="changeAudio('pronunciation', 'pronunciation_img')">Change:</button>
+        <input type="file" style="display:none" name="pronunciation" id="pronunciation">
+
+        <button type="button" onclick="deleteAudio('pronunciation_deleted', 'pronunciation_img')">Remove</button>
+        <input type="hidden" id="pronunciation_deleted" name="pronunciation_deleted" value="0">
+    </p>
+
+    <!--Will only be able to delete/add entire synonym/translation but not individually update their fields-->
+
+    {% if lang == 'origin' %}
+        <fieldset id="synonyms">
+            <legend>synonyms</legend>
+                <ul>
+                    {% for synonym in synonyms %}
+                        <li id="synonym{{ forloop.counter }}_li">
+                            {{ synonym.word_text }}
+                            <button type="button" onclick="deleteWord('{{ synonym.id }}', 'synonym{{ forloop.counter }}_to_delete', 'synonym{{ forloop.counter }}_li')">Delete word</button>
+                            {% if synonym.pronunciation and synonym.pronunciation|slice:'-3:' == 'mp3' %}
+                                <br>
+                                <audio id="{{ synonym.pronunciation }}">
+                                    <source src="{% static 'dictionary/files/' %}{{ synonym.pronunciation }}" type="audio/mpeg">
+                                </audio>
+                                <button type="button" onclick="playAudio('{{ synonym.pronunciation }}')">
+                                    <img src="{% static 'dictionary/audio.jpg' %}" height="30">
+                                </button>
+                            {% endif %}
+                            <input type="hidden" id="synonym{{ forloop.counter }}_to_delete" name="ids_to_delete[]" value="-1">
+                        </li>
+                    {% endfor %}
+                </ul>
+            <button type="button" onclick="addMoreFields('synonym', 'synonyms')">More synonyms</button>
+            <br>
+            <input type="hidden" id="synonym_count" name="synonym_count" value="0">
+        </fieldset>
+    {% endif %}
+
+    <fieldset id="translations">
+        <legend>translations</legend>
+            <ul>
+                {% for translation in translations %}
+                    <li id="translation{{ forloop.counter }}_li">
+                        {{ translation.word_text }}
+                        <button type="button" onclick="deleteWord('{{ translation.id }}', 'translation{{ forloop.counter }}_to_delete', 'translation{{ forloop.counter }}_li')">Delete word</button>
+                        {% if translation.pronunciation and translation.pronunciation|slice:'-3:' == 'mp3' %}
+                            <audio id="{{ translation.pronunciation }}">
+                                <source src="{% static 'dictionary/files/' %}{{ translation.pronunciation }}" type="audio/mpeg">
+                            </audio>
+                            <br>
+                            <button type="button" onclick="playAudio('{{ translation.pronunciation }}')">
+                                <img src="{% static 'dictionary/audio.jpg' %}" height="30">
+                            </button>
+                        {% endif %}
+                        <input type="hidden" id="translation{{ forloop.counter }}_to_delete" name="ids_to_delete[]" value="-1">
+                    </li>
+                {% endfor %}
+            </ul>
+        {% if not lang == 'origin' %}
+            <button type="button" onclick="addMoreFields('translation', 'translations')">More translations</button>
+            <br>
+        {% endif %}
+        <input type="hidden" id="translation_count" name="translation_count" value="0">
+    </fieldset>
+
+{% csrf_token %}
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+    <title>{% block title %} {% endblock %}</title>
+</head>
+<body>
+<h2 title="learn the grammar on Duolingo; customize the vocabulary you want to learn here">Learn More Words - improve your vocabulary</h2>
+
+<label for="lang" title="The language for which you are trying to learn new words">
+    Choose <span style="color:rgb(0, 0, 210)">source&#9432;</span> language:
+</label>
+<select id="lang" name="lang"
+    onchange="this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);">
+    {% for lan in langs %}
+        {% if lang == lan %}
+            <option value="{% url 'dictionary:index' lang=lan %}" selected>{{ lan }}</option>
+        {% else %}
+            <option value="{% url 'dictionary:index' lang=lan %}">{{ lan }}</option>
+        {% endif %}
+    {% endfor %}
+    {% if lang == 'origin' %}
+        <option value="{% url 'dictionary:index' lang='origin' %}" selected>origin</option>
+    {% else %}
+        <option value="{% url 'dictionary:index' lang='origin' %}">origin</option>
+    {% endif %}
+</select>
+
+<button type="button" onclick="location.href='{% url 'dictionary:languages' %}'">Add/Delete Language</button>
+
+<table width="80%">
+    <tr>
+        <td style="vertical-align:top" width="15%">
+            <ul>
+                <li>
+                    <a href="{% url 'dictionary:index' %}">Main page</a>
+                </li>
+                <li>
+                    <a href="{% url 'dictionary:words' lang=lang %}">See words</a>
+                </li>
+                <li>
+                    <a href="{% url 'dictionary:new_word_form' lang=lang %}">Add a word</a>
+                </li>
+                <li>
+                    <a href="{% url 'dictionary:practice' lang=lang %}">Practice</a>
+                </li>
+            </ul>
+        </td>
+        <td width="85%">
+            {% block content %}
+            {% endblock %}
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

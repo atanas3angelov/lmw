@@ -1,0 +1,65 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Practice {% endblock %}
+
+{% block content %}
+
+<script type="text/javascript">
+    window.onload = function() {
+        document.getElementById("next").focus();
+    }
+    function playAudio(audio_id) {
+        document.getElementById(audio_id).play();
+    }
+</script>
+
+<style>
+    #form_pane {
+        width: 400px;
+        height: 300px;
+    }
+    #practice_pane {
+        padding-top: 10%;
+    }
+    #answer, #check_answer, #next{
+        display: block;
+    }
+    #end {
+        float: right;
+    }
+    .correct {
+        color: green;
+    }
+    .incorrect {
+        color: red;
+    }
+</style>
+
+{% load static %}
+
+<form id="form_pane" action="{% url 'dictionary:practice' lang=lang %}" method="post">
+
+    <div id="practice_pane">
+        {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
+            <audio id="audio">
+                <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg">
+            </audio>
+            <button type="button" onclick="playAudio('audio')">
+                <img src="{% static 'dictionary/audio.jpg' %}" height="10">
+            </button>
+        {% endif %}
+
+        <label>{{ word.word_text }}</label>
+        <input id="answer" type="text" name="answer" value="{{ answer }}" disabled>
+        <p class="{{ message }}" id="message">{{ message }}</p>
+        <p class="{{ message }}" id="message_additional">{{ message_additional }}</p>
+
+        {% csrf_token %}
+
+        <input id="next" type="submit" name="next" value="Next">
+    </div>
+
+    <input id="end" type="submit" name="end" value="End">
+</form>
+
+{% endblock %}

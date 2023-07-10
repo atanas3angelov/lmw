@@ -1,0 +1,96 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Practice {% endblock %}
+
+{% block content %}
+
+<h3>Practice setup</h3>
+
+{% if error_message %}
+<script>
+    console.error('{{ error_message }}')
+</script>
+{% endif %}
+
+{% if user_error %}
+<h3 style="color: red">{{ user_error }}</h3>
+{% endif %}
+
+<form action="{% url 'dictionary:practice' lang=lang %}" method="post">
+    <fieldset>
+        <legend>Number of words to include in practice</legend>
+
+        <input type="radio" name="word_num" id="fixed" value="fixed" checked>
+        <label for="fixed">Fixed</label>
+        <input type="number" name="fixed_word_num" id="fixed_word_num" value="10" size="3" min="10" step="10">
+
+        <input type="radio" name="word_num" id="unlimited" value="unlimited">
+        <label for="fixed" title="stop practicing when pressing a button">Unlimited</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Translation direction</legend>
+
+        <input type="radio" name="translation_direction" id="from" value="from">
+        <label for="from">From {{ lang }}</label>
+
+        <input type="radio" name="translation_direction" id="to" value="to">
+        <label for="to">To {{ lang }}</label>
+
+        <input type="radio" name="translation_direction" id="mixed" value="mixed" checked>
+        <label for="mixed">Mixed</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>What words to include in practice</legend>
+
+        <input type="checkbox" name="only_one_word_type" id="only_one_word_type">
+        <label for="only_one_word_type">Only words of type:</label>
+        <select name="word_type" id="word_type">
+            <option value="n" selected>noun</option>
+            <option value="v">verb</option>
+            <option value="adj">adjective</option>
+            <option value="adv">adverb</option>
+            <option value="con">conjunction</option>
+            <option value="other">other</option>
+        </select>
+        <input type="checkbox" name="gender_oriented" id="gender_oriented">
+        <label for="gender_oriented">Direct the practice around the word noun's gender</label>
+        <br>
+
+        <input type="checkbox" name="frequently_mistaken_words" id="frequently_mistaken_words">
+        <label for="frequently_mistaken_words">Words I frequently mistake</label> <br>
+
+        <input type="checkbox" name="infrequently_practiced_words" id="infrequently_practiced_words">
+        <label for="infrequently_practiced_words">Words I haven't practiced for a long time</label> <br>
+    </fieldset>
+
+    <fieldset>
+        <legend>Type of questions</legend>
+
+        <input type="checkbox" name="direct_text" id="direct_text" checked>
+        <label for="direct_text">Direct text</label> <br>
+
+        <input type="checkbox" name="multiple_choice" id="multiple_choice">
+        <label for="multiple_choice">Multiple choice</label> <br>
+
+        <input type="checkbox" name="multiple_choice_connect" id="multiple_choice_connect">
+        <label for="multiple_choice">Multiple choice connect</label> <br>
+
+        <input type="checkbox" name="listening" id="listening" disabled>
+        <label for="listening">Listening</label> <br>
+
+        <input type="checkbox" name="listening_multiple_choice" id="listening_multiple_choice" disabled>
+        <label for="listening_multiple_choice">Listening multiple choice</label> <br>
+
+        <input type="checkbox" name="redo_until_correct" id="redo_until_correct" disabled>
+        <label for="redo_until_correct">Redo word during practice session until you get it right</label> <br>
+    </fieldset>
+
+    {% csrf_token %}
+
+    <br>
+    <input type="submit" name="start" value="Start">
+</form>
+
+{% endblock %}
