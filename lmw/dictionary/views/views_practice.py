@@ -43,6 +43,8 @@ def practice_view(request, lang=''):
             request.session['q_a'] = 'a'    # next expected request should be an answer check request
 
             # word_num: limited  -> send words+translations to frontend; next answer request update those words
+            if request.session['word_num'] == 'fixed':
+                return render(request, "dictionary/practice_react.html", context)
             # TODO
 
             # word_num: unlimited -> do everything in backend
