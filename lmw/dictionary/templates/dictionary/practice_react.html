@@ -6,9 +6,9 @@
 
 {% block content %}
 
-<div id="app"></div>
-{% render_bundle 'frontend' %}
+    <div id="app"></div>
+    {% render_bundle 'frontend' %}
 
-{% csrf_token %}
+    {% csrf_token %}
 
 {% endblock %}

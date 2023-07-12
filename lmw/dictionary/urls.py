@@ -5,6 +5,9 @@ app_name = 'dictionary'
 
 urlpatterns = [
     path("", views.index, name="index"),  # GET -> main menu
+
+    path("react/", views.react_view, name="react"),
+
     path("<str:lang>/words/", views.words_view, name="words"),  # GET -> all, POST -> add word
     path("<str:lang>/forms/new_word/", views.new_word, name="new_word_form"),  # GET -> new word form
     path("<str:lang>/words/<int:word_id>", views.word_view, name="word"),  # POST -> fancy update, DELETE, GET

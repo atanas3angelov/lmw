@@ -8,7 +8,7 @@ module.exports = {
   },
   output: {
     path: path.resolve('./dictionary/static/dictionary/'),
-    filename: '[name]-[hash].js',
+    filename: '[name]-[fullhash].js',
     publicPath: '/static/dictionary/',
   },
   plugins: [
