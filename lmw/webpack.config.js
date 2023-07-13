@@ -8,7 +8,8 @@ module.exports = {
   },
   output: {
     path: path.resolve('./dictionary/static/dictionary/'),
-    filename: '[name]-[fullhash].js',
+//    filename: '[name]-[fullhash].js',
+    filename: 'react-bundle.js',
     publicPath: '/static/dictionary/',
   },
   plugins: [

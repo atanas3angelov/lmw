@@ -1,10 +1,15 @@
+import random
+
 from django.shortcuts import render, get_object_or_404, redirect
-from .views_dictionary import get_lang_menu
 from django.utils import timezone
 from django.http import JsonResponse
+from django.db.models import F
+from django.forms import model_to_dict
 from django.db import connection
-import random
+
+from .views_dictionary import get_lang_menu
 from ..models import Word, Translation
+from ..exceptions.InsufficientWordsError import InsufficientWordsError
 
 
 def practice_view(request, lang=''):
@@ -22,6 +27,7 @@ def practice_view(request, lang=''):
             # ini session setting preferences
 
             request.session['started'] = True
+            request.session['lang'] = lang
             request.session['q_a'] = 'q'  # set state to ask question / check answers
 
             try:
@@ -47,10 +53,7 @@ def practice_view(request, lang=''):
 
                 # word_num: limited  -> send words+translations to frontend; next answer request update those words
                 if request.session['word_num'] == 'fixed':
-                    context['react_context'] = {
-                        'a': 1,
-                        'b': 'abc'
-                    }
+
                     return render(request, "dictionary/practice_react.html", context)
                 # TODO
 
@@ -65,7 +68,7 @@ def practice_view(request, lang=''):
                 request.session['question_type'] = get_random_from(allowed_question_types)
 
                 if request.session['question_type'] == 'direct_text':
-                    word = get_practice_direct_text_q_word(context['lang'])
+                    word = get_words_for_practice(lang, 1)
                     request.session['word_id'] = word.id
                     # TODO question_direction to decide word (but keep word_id as is)
                     context['word'] = word
@@ -120,17 +123,28 @@ def practice_view(request, lang=''):
 
 
 def react_view(request):
+
     if request.method == 'GET':
 
-        data = {'a': 1, 'b': 'abc'}
-        response = JsonResponse(data)
+        data = {
+            'session': dict(zip(request.session.keys(), request.session.values())),
+        }
 
-        # response["Access-Control-Allow-Origin"] = "*"
-        # response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-        # response["Access-Control-Max-Age"] = "1000"
-        # response["Access-Control-Allow-Headers"] = "X-Requested-With, Content-Type"
+        try:
+            words = get_words_for_practice(request.session['lang'],
+                                           request.session['fixed_word_num'],
+                                           request.session['word_type'] if request.session['only_one_word_type'] else False,
+                                           request.session['frequently_mistaken_words'],
+                                           request.session['infrequently_practiced_words'])
 
-        return response
+            data['words'] = serialize_words(words)
+
+        except InsufficientWordsError as e:
+            # TODO inform frontend and let it deal with user's input
+            data['error'] = str(e)
+            print(e)
+
+        return JsonResponse(data)
 
     if request.method == 'POST':
 
@@ -145,31 +159,31 @@ def set_session_ini_preferences(request):
     # fixed / unlimited
 
     if request.session['word_num'] == 'fixed':
-        request.session['fixed_word_num'] = request.POST.get('fixed_word_num', 0)
+        request.session['fixed_word_num'] = int(request.POST.get('fixed_word_num', 0))
     else:  # if request.session['word_num'] == 'unlimited'
         request.session['fixed_word_num'] = 0
 
     request.session['translation_direction'] = request.POST.get('translation_direction', 'mixed')
     # from / to / mixed
 
-    request.session['only_one_word_type'] = request.POST.get('only_one_word_type', False)
+    request.session['only_one_word_type'] = bool(request.POST.get('only_one_word_type', False))
 
     if request.session:
         request.session['word_type'] = request.POST.get('word_type', 'n')
     # n / v / adj / adv / con / other
 
-    request.session['gender_oriented'] = request.POST.get('gender_oriented', False)
+    request.session['gender_oriented'] = bool(request.POST.get('gender_oriented', False))
 
-    request.session['frequently_mistaken_words'] = request.POST.get('frequently_mistaken_words', False)
-    request.session['infrequently_practiced_words'] = request.POST.get('infrequently_practiced_words', False)
+    request.session['frequently_mistaken_words'] = bool(request.POST.get('frequently_mistaken_words', False))
+    request.session['infrequently_practiced_words'] = bool(request.POST.get('infrequently_practiced_words', False))
 
-    request.session['direct_text'] = request.POST.get('direct_text', False)
-    request.session['multiple_choice'] = request.POST.get('multiple_choice', False)
-    request.session['multiple_choice_connect'] = request.POST.get('multiple_choice_connect', False)
-    request.session['listening'] = request.POST.get('listening', False)
-    request.session['listening_multiple_choice'] = request.POST.get('listening_multiple_choice', False)
+    request.session['direct_text'] = bool(request.POST.get('direct_text', False))
+    request.session['multiple_choice'] = bool(request.POST.get('multiple_choice', False))
+    request.session['multiple_choice_connect'] = bool(request.POST.get('multiple_choice_connect', False))
+    request.session['listening'] = bool(request.POST.get('listening', False))
+    request.session['listening_multiple_choice'] = bool(request.POST.get('listening_multiple_choice', False))
 
-    request.session['redo_until_correct'] = request.POST.get('redo_until_correct', False)
+    request.session['redo_until_correct'] = bool(request.POST.get('redo_until_correct', False))
 
 
 def get_allowed_question_types(session):
@@ -205,22 +219,80 @@ def get_random_from(allowed_question_types):
     return allowed_question_types[r]
 
 
-# TODO generalize func for all the question_type input
-def get_practice_direct_text_q_word(lang):
+def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistaken=False, infrequently_practiced=False):
+    """
+    get words based on specifications
+    :param lang: language for which to return words
+    :param n: number of words to return (must be 1 or a positive whole number)
+    :param word_type: leave False to return words of any type, else choose one of the following:
+    ('n': nouns, 'v': verbs, 'adj': adjectives, 'adv': adverbs, 'con': conjunctions, 'other': other)
+    to return words only from specified type
+    :param frequently_mistaken: set to True to prioritizes words where num of (mistakes - correct) attempts is highest
+    :param infrequently_practiced: set to True to prioritizes words where last_practiced timestamp is the oldest
+    (if both frequently_mistaken and infrequently_practiced are set to True infrequently_practiced has priority)
+    :return: 1 word if n=1 or words list according to specifications, or raise InsufficientWordsError
+    """
 
-    # TODO? order('?') can be slow -- figure out faster solution for not contiguous ids
-    word = Word.objects.filter(language=lang).order_by('?').first()
-    # random word with raw SQL
-    # cursor = connection.cursor()
-    # cursor.execute('''
-    #     SELECT *
-    #     FROM random AS r1 JOIN
-    #         (SELECT CEIL(RAND() *
-    #             (SELECT MAX(id) FROM random)) AS id)
-    #         AS r2
-    #     WHERE r1.id >= r2.id
-    #     ORDER BY r1.id ASC
-    #     LIMIT 1''')
-    #
-    # word = cursor.fetchone()
-    return word
+    if n <= 0:  # you get nothing for trying to break the app
+        return []
+
+    words = Word.objects.filter(language=lang)
+
+    if word_type not in ['n', 'v', 'adj', 'adv', 'con', 'other']:
+        word_type = False
+
+    if word_type:
+        words = words.filter(word_type=word_type)
+
+    if infrequently_practiced or frequently_mistaken:
+
+        if infrequently_practiced:
+            words = words.order_by('last_practiced')
+
+        if frequently_mistaken:
+            words = words.annotate(mc_diff=F('mistakes') - F('correct')).order_by('-mc_diff')
+
+    else:
+        # TODO? order('?') can be slow -- figure out faster solution for not contiguous ids
+        words = words.order_by('?')
+
+        # word = Word.objects.filter(language=lang).order_by('?').first()
+
+        # random word with raw SQL
+        # cursor = connection.cursor()
+        # cursor.execute('''
+        #     SELECT *
+        #     FROM random AS r1 JOIN
+        #         (SELECT CEIL(RAND() *
+        #             (SELECT MAX(id) FROM random)) AS id)
+        #         AS r2
+        #     WHERE r1.id >= r2.id
+        #     ORDER BY r1.id ASC
+        #     LIMIT 1''')
+        #
+        # word = cursor.fetchone()
+
+    if len(words) < n:
+        raise InsufficientWordsError(f'available {len(words)}, asked {n}: lang {lang} only of type {word_type}')
+
+    if n == 1:
+        return words.first()
+    else:
+        return words[:n]
+
+
+def serialize_words(words):
+
+    words_json = []
+    for word in words:
+        w = model_to_dict(word, fields=[field.name for field in word._meta.fields])  # no translations
+
+        # add translations
+        trs = []
+        for translation in word.translations.all():
+            trs.append(model_to_dict(translation, fields=[field.name for field in word._meta.fields]))
+        w['translations'] = trs
+
+        words_json.append(w)
+
+    return words_json

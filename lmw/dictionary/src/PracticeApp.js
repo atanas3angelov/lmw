@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 
-const App = () => {
+const PracticeApp = () => {
 
-    const [a, setA] = useState('')
-    const [b, setB] = useState('')
+    const [session, setSession] = useState('')
 
     const fetchData = () => {
         fetch("http://localhost:8000/dictionary/react/")
@@ -11,8 +10,9 @@ const App = () => {
                 return response.json();
             })
             .then(data => {
-                setA(data.a);
-                setB(data.b);
+                setSession(data.session);
+                console.log(data.session);
+                console.log(data.words);
             })
             .catch((error) => {
                 console.log(error)
@@ -26,10 +26,9 @@ const App = () => {
     return (
         <div>
             Hello, World!
-            <p>a = {a}</p>
-            <p>b = {b}</p>
+            <p>session_q_a = {session.q_a}</p>
         </div>
     );
 }
 
-export default App
+export default PracticeApp
