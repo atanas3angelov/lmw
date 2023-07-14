@@ -32,11 +32,17 @@
     #practice_pane {
         padding-top: 10%;
     }
-    #answer, #check_answer, #next{
+    #answer{
         display: block;
     }
-    #end {
+    .control {
         float: right;
+    }
+    .correct {
+        color: green;
+    }
+    .incorrect {
+        color: red;
     }
 </style>
 
@@ -58,11 +64,11 @@
         <input id="answer" type="text" name="answer" autocomplete="off">
 
         {% csrf_token %}
-
-        <input id="check_answer" type="submit" name="check_answer" value="Check answer" disabled>
     </div>
-
-    <input id="end" type="submit" name="end" value="End">
+    <div class="control">
+        <input id="check_answer" type="submit" value="Check answer" disabled>
+        <input type="submit" name="end" value="End">
+    </div>
 </form>
 
 {% endblock %}

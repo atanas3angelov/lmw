@@ -21,10 +21,10 @@
     #practice_pane {
         padding-top: 10%;
     }
-    #answer, #check_answer, #next{
+    #answer{
         display: block;
     }
-    #end {
+    .control {
         float: right;
     }
     .correct {
@@ -50,16 +50,16 @@
         {% endif %}
 
         <label>{{ word.word_text }}</label>
-        <input id="answer" type="text" name="answer" value="{{ answer }}" disabled>
-        <p class="{{ message }}" id="message">{{ message }}</p>
-        <p class="{{ message }}" id="message_additional">{{ message_additional }}</p>
+        <input id="answer" type="text" value="{{ answer }}" disabled>
+        <p class="{{ message }}">{{ message }}</p>
+        <p class="{{ message }}">{{ message_additional }}</p>
 
         {% csrf_token %}
-
-        <input id="next" type="submit" name="next" value="Next">
     </div>
-
-    <input id="end" type="submit" name="end" value="End">
+    <div class="control">
+        <input id="next" type="submit" value="Next">
+        <input type="submit" name="end" value="End">
+    </div>
 </form>
 
 {% endblock %}

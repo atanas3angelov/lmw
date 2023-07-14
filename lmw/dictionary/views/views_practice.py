@@ -28,7 +28,6 @@ def practice_view(request, lang=''):
 
             request.session['started'] = True
             request.session['lang'] = lang
-            request.session['q_a'] = 'q'  # set state to ask question / check answers
 
             try:
                 set_session_ini_preferences(request)   # only populate session from POST fields
@@ -47,17 +46,13 @@ def practice_view(request, lang=''):
                 request.session.flush()
                 return render(request, "dictionary/practice.html", context)
 
+            # word_num: limited  -> activate react frontend
+            if request.session['word_num'] == 'fixed':
+                return render(request, "dictionary/practice_react.html", context)
+
+            # word_num: unlimited -> do everything in backend
             # TODO guard/recover from browser refresh/back
-            if request.session['q_a'] == 'q':
-                request.session['q_a'] = 'a'    # next expected request should be an answer check request
-
-                # word_num: limited  -> send words+translations to frontend; next answer request update those words
-                if request.session['word_num'] == 'fixed':
-
-                    return render(request, "dictionary/practice_react.html", context)
-                # TODO
-
-                # word_num: unlimited -> do everything in backend
+            if not request.POST.get('answer', False):  # if no answer, ask a question
 
                 # decide translation direction if mixed selected
                 if request.session['translation_direction'] == 'mixed':
@@ -77,8 +72,7 @@ def practice_view(request, lang=''):
 
                 # TODO do the rest question_type responses to set a question
 
-            else:   # if request.session['q_a'] == 'a'
-                request.session['q_a'] = 'q'    # next expected request should be a new question
+            else:   # if answered, show check
 
                 # word_num: limited  -> next answer request update words by the submitted ids and correct/mistake vals
                 # word_num: unlimited -> do everything in backend
@@ -111,11 +105,10 @@ def practice_view(request, lang=''):
 
                 # TODO do the rest question_type responses to check an answer
 
-    # if request.method == 'GET':
-    #
-    #     return render(request, "dictionary/practice.html", context)
-
     else:
+        # session clean-up before starting new one
+        request.session.flush()
+
         langs, lang = get_lang_menu(lang)
         context = {"langs": langs, "lang": lang}
 
@@ -148,7 +141,17 @@ def react_view(request):
 
     if request.method == 'POST':
 
-        pass
+        print('Raw Data: "%s"' % request.body)
+
+        lang = request.session['lang']
+
+        # session clean-up before starting new one
+        request.session.flush()
+
+        langs, lang = get_lang_menu(lang)
+        context = {"langs": langs, "lang": lang}
+
+        return render(request, "dictionary/practice.html", context)
 
     return JsonResponse({'err': 'no clue'})
 

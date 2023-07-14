@@ -14,9 +14,6 @@ files_dir = "dictionary/static/dictionary/files/"
 
 def index(request, lang=''):
 
-    # TODO remove session clean-up
-    request.session.flush()
-
     langs, lang = get_lang_menu(lang)
 
     return render(request, "dictionary/index.html", {"langs": langs, "lang": lang})
