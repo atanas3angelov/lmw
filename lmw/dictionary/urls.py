@@ -7,6 +7,8 @@ urlpatterns = [
     path("", views.index, name="index"),  # GET -> main menu
 
     path("react/", views.react_view, name="react"),
+    path("files/", views.download_file2, name='download_file2'),
+    path("files/<str:filename>", views.download_file, name='download_file'),
 
     path("<str:lang>/words/", views.words_view, name="words"),  # GET -> all, POST -> add word
     path("<str:lang>/forms/new_word/", views.new_word, name="new_word_form"),  # GET -> new word form

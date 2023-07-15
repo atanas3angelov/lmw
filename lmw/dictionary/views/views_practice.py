@@ -1,13 +1,17 @@
 import random
+import json
+import urllib
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpResponseNotFound
+from django.urls import reverse
 from django.db.models import F
 from django.forms import model_to_dict
 from django.db import connection
+from django.conf import settings
 
-from .views_dictionary import get_lang_menu
+from .views_dictionary import get_lang_menu, files_dir
 from ..models import Word, Translation
 from ..exceptions.InsufficientWordsError import InsufficientWordsError
 
@@ -141,19 +145,75 @@ def react_view(request):
 
     if request.method == 'POST':
 
-        print('Raw Data: "%s"' % request.body)
+        # print('Raw Data: "%s"' % request.body)
+
+        data_dict = json.loads(request.body)
+
+        print([w['word_text'] for w in data_dict])
 
         lang = request.session['lang']
 
         # session clean-up before starting new one
         request.session.flush()
 
-        langs, lang = get_lang_menu(lang)
-        context = {"langs": langs, "lang": lang}
+        # return redirect("dictionary:practice", lang=lang)
 
-        return render(request, "dictionary/practice.html", context)
+        return JsonResponse({'redirect_url': reverse('dictionary:practice', kwargs={'lang': lang})})
 
     return JsonResponse({'err': 'no clue'})
+
+
+def download_file(request, filename):
+
+    # for specially escaped character in url (e.g. l%C3%B6schen.mp3 -> löschen.mp3)
+    filename = urllib.parse.unquote(filename)
+
+    if filename == 'audio.jpg' or filename == 'no_audio.jog':
+        file_path = './dictionary' + settings.STATIC_URL + 'dictionary/' + filename
+        file_type = 'image/jpeg'
+    else:
+        file_path = './' + files_dir + filename
+        file_type = 'audio/mpeg'
+
+    print(file_path)
+
+    try:
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+
+        response = HttpResponse(file_data, content_type=file_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    except IOError:
+        response = HttpResponseNotFound()
+
+    return response
+
+
+def download_file2(request):
+    data = json.loads(request.body)
+    filename = data['filename'];
+
+    if filename == 'audio.jpg' or filename == 'no_audio.jog':
+        file_path = './dictionary' + settings.STATIC_URL + 'dictionary/' + filename
+        file_type = 'image/jpeg'
+    else:
+        file_path = './' + files_dir + filename
+        file_type = 'audio/mpeg'
+
+    print(file_path)
+
+    try:
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+
+        response = HttpResponse(file_data, content_type=file_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    except IOError:
+        response = HttpResponseNotFound()
+
+    return response
 
 
 def set_session_ini_preferences(request):

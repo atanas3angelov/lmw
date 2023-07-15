@@ -1,6 +1,6 @@
 const path = require('path')
 const BundleTracker = require('webpack-bundle-tracker')
-//const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
   entry: {
@@ -8,12 +8,14 @@ module.exports = {
   },
   output: {
     path: path.resolve('./dictionary/static/dictionary/'),
-//    filename: '[name]-[fullhash].js',
-    filename: 'react-bundle.js',
+    filename: '[name]-[fullhash].js',
+//    filename: 'react-bundle.js',
     publicPath: '/static/dictionary/',
   },
   plugins: [
-//    new CleanWebpackPlugin(),
+    new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: ["**/*", "!audio.jpg", "!no*", "!files/**"]
+    }),
     new BundleTracker({
       path: __dirname,
       filename: 'webpack-stats.json',

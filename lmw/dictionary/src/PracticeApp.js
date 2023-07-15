@@ -1,153 +1,218 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
-const base_url = 'http://localhost:8000/';
-const dictionary_url = base_url + 'dictionary/';
-const react_url = base_url + 'dictionary/react/';
-const files_dir = base_url + 'dictionary/files/';
+const base_url = 'http://localhost:8000';
+const react_url = base_url + '/dictionary/react/';
+const files_dir = base_url + '/dictionary/files/';
+const static_files = '/dictionary/static/dictionary/';
+// const files_dir = base_url + '/dictionary/static/dictionary/files/';
 
-const CheckButton = ({ onCheckAnswer }) => {
+const CheckButton = ({ answer, onCheckAnswer }) => {
+    console.log('render CheckButton');
 
+    const isDisabled = answer ? false : true;
 
     return (
-        <input 
-            id="check_answer" 
-            type="submit" 
-            value="Check answer" 
-            onClick = {() => onCheckAnswer()} />
+        <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
     );
 }
 
 const NextButton = ({ onNextQuestion }) => {
-
+    console.log('render NextButton');
 
     return (
-        <input 
-            id="next" 
-            type="submit" 
-            value="Next" 
-            onClick = {() => onNextQuestion()} />
+        <input type="button" value="Next" onClick={ onNextQuestion } />
     );
 }
 
 const AudioButton = ({pronunciation}) => {
+    console.log('render AudioButton');
 
     let audio_id = "audio";
     let audio_src_url = files_dir + pronunciation;
-    let button_img_src_url = dictionary_url + 'audio.jpg';
+    let button_img_src_url = 'audio.jpg';
+
+    const downloadFile = (filename) => {
+
+        if (filename)
+            fetch(files_dir + filename)
+        // const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        // const request = new Request(
+        //     files_dir,
+        //     {
+        //         method: 'POST',
+        //         headers: {
+        //             // 'Accept': 'application/json',
+        //             'Content-Type': 'application/json',
+        //             'X-CSRFToken': csrftoken
+        //         },
+        //         body: JSON.stringify({'filename': filename}),
+        //         mode: 'same-origin' // Do not send CSRF token to another domain.
+        //     }
+        // );
+
+        // fetch(request);
+
+    };
+
+    useEffect(() => {
+        downloadFile('audio.jpg');
+        downloadFile(pronunciation);
+    }, []);
+
+    const playAudio = (audio_id) => {
+        console.log(audio_id);
+        document.getElementById(audio_id).play()
+    }
 
     if(pronunciation && pronunciation.split('.').pop() == 'mp3')
 
         return (<>
-            <audio id="{ audio_id }">
-                <source src="{ audio_src_url }" type="audio/mpeg" />
+            <audio id={ audio_id }>
+                <source src={ files_dir + pronunciation } type="audio/mpeg" />
             </audio>
-            <button type="button" onClick="playAudio('{ audio_id }')">
-                <img src="{ button_img_src_url }" height="10" />
+            <button type="button" onClick={ () => playAudio( audio_id ) }>
+                {/* <img src= '../../files/audio.jpg'  height="10" /> */}
+                <img src= { files_dir + 'audio.jpg' }  height="10" />
             </button>
         </>);
     else
         return (<></>)
 }
 
-const DirectTextQ = ({ word, listening, onAnswerChange }) => {
+const DirectTextQ = ({ word, listening, onAnswerChange, onCheckAnswer }) => {
+    console.log('render DirectTextQ');
+
     let word_text = listening ? '' : word.word_text;
+
+    function onEnter(e) {
+        console.log('Enter pressed');
+        if (e.key == 'Enter' && e.target.value)
+            onCheckAnswer();
+    }
 
     return (<>
         <AudioButton pronunciation={word.pronunciation} />
         <label>{ word_text }</label>
-        <input id="answer" type="text" autoComplete="off" onChange={(e) => onAnswerChange(e.target.value)} />
+        <input id="answer" type="text" autoComplete="off" autoFocus 
+            onChange={(e) => onAnswerChange(e.target.value)}
+            onKeyDown={(e) => onEnter(e)} />
     </>);
 }
 
-const DirectTextA = ({ word, message, message_additional }) => {
+const DirectTextA = ({ word, answer, message, message_additional }) => {
+    console.log('render DirectTextA');
+
+    function onEnter(e) {
+        console.log('Enter pressed');
+        if (e.key == 'Enter' && e.target.value)
+            onNextQuestion();
+    }
+    
     return (<>
         <AudioButton pronunciation={word.pronunciation} />
-        <label>{ word_text }</label>
-        <input id="answer" type="text" autoComplete="off" disabled />
-        <p className="{ message }">{{ message }}</p>
-        <p className="{ message }">{{ message_additional }}</p>
+        <label>{ word.word_text }</label>
+        <input id="answer" type="text" autoComplete="off" value={ answer } disabled />
+        <p className={ message }>{ message }</p>
+        <p className={ message }>{ message_additional }</p>
     </>);
 }
 
 const PracticePane = ({ session, words }) => {
+    console.log('render PracticePane');
 
     const [answer, setAnswer] = useState('');
     const [answerPane, setAnswerPane] = useState(false);
-    
+    const [message, setMessage] = useState('');
+    const [message_additional, setMessage_additional] = useState('');
+    const [trained_words] = useState([]);
+
+    console.log(words);
     var word;
-    var trained_words = [];
-    var message = '';
-    var message_additional = '';
 
     if (words.length > 0) {
-        word = words.shift();
+        word = words[0];
+        // word = words.shift();
     } else {
         console.warn('No words to start practice!');
     }
 
-    const checkAnswer = () => {
-        
+    const question_answer = answerPane ? 
+        <DirectTextA 
+            word={ word } 
+            answer={ answer } 
+            message={ message } 
+            message_additional={ message_additional } /> :
+        <DirectTextQ 
+            word={ word } 
+            listening={ false } 
+            onAnswerChange={ (val) => setAnswer(val) } 
+            onCheckAnswer={ checkAnswer } />;
+    
+    const next_button = answerPane ? 
+        <NextButton onNextQuestion={ nextQuestion } /> :
+        <CheckButton answer={ answer } onCheckAnswer={ checkAnswer } />;
+
+    function checkAnswer () {
+
         var correct_translations = [];
 
         word.translations.forEach(w => correct_translations.push(w.word_text));
 
         if (correct_translations.includes(answer)) {
             word.correct += 1;
-            message = 'correct';
+            setMessage('correct');
         }
         else {
             word.mistakes += 1;
-            message = 'incorrect';
+            setMessage('incorrect');
         }
         
-        message_additional = '[' + correct_translations.join(' ') + ']';
+        setMessage_additional('[' + correct_translations.join(' ') + ']');
+
+        trained_words.push(word);
 
         setAnswerPane(true);
     }
 
-    const nextQuestion = () => {
+    function nextQuestion () {
 
         // decide on question type
 
-        trained_words.push(word);
 
         if (words.length > 0) {
             word = words.shift();
         } else {
-            question_answer = '';
-            next_button = '';
+            question_answer = <></>;
+            next_button = <></>;
         }
 
+        setAnswer('');
         setAnswerPane(false);
     }
 
     const end = () => {
 
-        // send trained_words (with updated correct/mistakes ) to backend (backend will fix the last_practiced)
-        // (async () => {
-            // const rawResponse = await 
-            fetch(react_url, {
-              method: 'POST',
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(trained_words)
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const request = new Request(
+            react_url,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(trained_words),
+                mode: 'same-origin' // Do not send CSRF token to another domain.
+            }
+        );
+
+        fetch(request)
+            .then(response => response.json())
+            .then(body => {
+                window.location.href = base_url + body.redirect_url;
             });
-            // const content = await rawResponse.json();
-          
-            // console.log(content);
-        //   })();
-
     }
-
-    let next_button = answerPane ? 
-        <NextButton onNextQuestion={nextQuestion} /> : 
-        <CheckButton onCheckAnswer={checkAnswer} />;
-    
-    let question_answer = answerPane ? 
-        <DirectTextA word={word} message={message} message_additional={message_additional} /> : 
-        <DirectTextQ word={word} listening={false} onAnswerChange = {(val) => setAnswer(val)} />;
 
     return (<>
         <div id="practice_pane">
@@ -161,11 +226,10 @@ const PracticePane = ({ session, words }) => {
 }
 
 const PracticeApp = () => {
+    console.log('render PracticeApp');
 
     const [session, setSession] = useState('');
     const [words, setWords] = useState([]);
-
-    let practicePane = words.length > 0 ? <PracticePane session={session} words={words} /> : <></>;
 
     const fetchData = () => {
         fetch(react_url)
@@ -191,8 +255,7 @@ const PracticeApp = () => {
         <div>
             Hello, World!
         </div>
-        { practicePane }
-        {/* <PracticePane session={session} words={words} /> */}
+        { words.length > 0 ? <PracticePane session={session} words={words} /> : <></> }
     </>);
 }
 
