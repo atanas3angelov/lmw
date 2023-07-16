@@ -103,7 +103,7 @@ def practice_view(request, lang=''):
                     context['answer'] = answer
                     context['message'] = message
                     # TODO question_direction reference word_text
-                    context['message_additional'] = ' '.join(translations)
+                    context['message_additional'] = ' OR '.join(translations)
 
                     return render(request, "dictionary/practice_direct_text_a.html", context)
 
@@ -163,7 +163,7 @@ def react_view(request):
     return JsonResponse({'err': 'no clue'})
 
 
-def download_file(request, filename):
+def download_file(_request, filename):
 
     # for specially escaped character in url (e.g. l%C3%B6schen.mp3 -> löschen.mp3)
     filename = urllib.parse.unquote(filename)
@@ -174,34 +174,6 @@ def download_file(request, filename):
     else:
         file_path = './' + files_dir + filename
         file_type = 'audio/mpeg'
-
-    print(file_path)
-
-    try:
-        with open(file_path, 'rb') as f:
-            file_data = f.read()
-
-        response = HttpResponse(file_data, content_type=file_type)
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    except IOError:
-        response = HttpResponseNotFound()
-
-    return response
-
-
-def download_file2(request):
-    data = json.loads(request.body)
-    filename = data['filename'];
-
-    if filename == 'audio.jpg' or filename == 'no_audio.jog':
-        file_path = './dictionary' + settings.STATIC_URL + 'dictionary/' + filename
-        file_type = 'image/jpeg'
-    else:
-        file_path = './' + files_dir + filename
-        file_type = 'audio/mpeg'
-
-    print(file_path)
 
     try:
         with open(file_path, 'rb') as f:

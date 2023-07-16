@@ -6,6 +6,28 @@
 
 {% block content %}
 
+    <style>
+        #form_pane {
+            width: 400px;
+            height: 300px;
+        }
+        #practice_pane {
+            padding-top: 10%;
+        }
+        #answer{
+            display: block;
+        }
+        .control {
+            float: right;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+    </style>
+
     <div id="app"></div>
     {% render_bundle 'frontend' %}
 

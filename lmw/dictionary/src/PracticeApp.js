@@ -1,66 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const base_url = 'http://localhost:8000';
 const react_url = base_url + '/dictionary/react/';
 const files_dir = base_url + '/dictionary/files/';
-const static_files = '/dictionary/static/dictionary/';
-// const files_dir = base_url + '/dictionary/static/dictionary/files/';
 
-const CheckButton = ({ answer, onCheckAnswer }) => {
-    console.log('render CheckButton');
-
-    const isDisabled = answer ? false : true;
-
-    return (
-        <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
-    );
-}
-
-const NextButton = ({ onNextQuestion }) => {
-    console.log('render NextButton');
-
-    return (
-        <input type="button" value="Next" onClick={ onNextQuestion } />
-    );
-}
 
 const AudioButton = ({pronunciation}) => {
     console.log('render AudioButton');
 
     let audio_id = "audio";
     let audio_src_url = files_dir + pronunciation;
-    let button_img_src_url = 'audio.jpg';
-
-    const downloadFile = (filename) => {
-
-        if (filename)
-            fetch(files_dir + filename)
-        // const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        // const request = new Request(
-        //     files_dir,
-        //     {
-        //         method: 'POST',
-        //         headers: {
-        //             // 'Accept': 'application/json',
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': csrftoken
-        //         },
-        //         body: JSON.stringify({'filename': filename}),
-        //         mode: 'same-origin' // Do not send CSRF token to another domain.
-        //     }
-        // );
-
-        // fetch(request);
-
-    };
-
-    useEffect(() => {
-        downloadFile('audio.jpg');
-        downloadFile(pronunciation);
-    }, []);
+    let button_img_src_url = files_dir + 'audio.jpg';
 
     const playAudio = (audio_id) => {
-        console.log(audio_id);
         document.getElementById(audio_id).play()
     }
 
@@ -79,43 +31,109 @@ const AudioButton = ({pronunciation}) => {
         return (<></>)
 }
 
-const DirectTextQ = ({ word, listening, onAnswerChange, onCheckAnswer }) => {
+const DirectTextQ = ({ word, answer, listening, onAnswerChange, onCheckAnswer}) => {
     console.log('render DirectTextQ');
 
     let word_text = listening ? '' : word.word_text;
 
+    const isDisabled = answer ? false : true;
+
     function onEnter(e) {
-        console.log('Enter pressed');
         if (e.key == 'Enter' && e.target.value)
             onCheckAnswer();
     }
 
     return (<>
-        <AudioButton pronunciation={word.pronunciation} />
+        { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
         <label>{ word_text }</label>
-        <input id="answer" type="text" autoComplete="off" autoFocus 
+        <input id="answer" type="text" autoComplete="off" autoFocus
             onChange={(e) => onAnswerChange(e.target.value)}
             onKeyDown={(e) => onEnter(e)} />
+
+        <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
     </>);
 }
 
-const DirectTextA = ({ word, answer, message, message_additional }) => {
+const DirectTextA = ({ word, answer, message, message_additional, onNextQuestion }) => {
     console.log('render DirectTextA');
 
-    function onEnter(e) {
-        console.log('Enter pressed');
-        if (e.key == 'Enter' && e.target.value)
-            onNextQuestion();
-    }
-    
     return (<>
-        <AudioButton pronunciation={word.pronunciation} />
+        { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
         <label>{ word.word_text }</label>
-        <input id="answer" type="text" autoComplete="off" value={ answer } disabled />
+        <input id="answer" type="text" value={ answer } disabled />
+
+        <input type="button" value="Next" onClick={ onNextQuestion } />
+
         <p className={ message }>{ message }</p>
         <p className={ message }>{ message_additional }</p>
     </>);
 }
+
+// const DirectText = ({ word, listening, onQuestionChange }) => {
+//     console.log('render DirectText');
+
+//     const [answer, setAnswer] = useState('');
+//     const [checkingAnswer, setCheckingAnswer] = useState(false);
+//     const [message, setMessage] = useState('');
+//     const [message_additional, setMessage_additional] = useState('');
+//     const ref = useRef(null);
+
+//     useEffect(() => {
+//         ref.current && ref.current.focus();
+//     }, []);
+
+//     function onEnter(e) {
+//         if (e.key == 'Enter' && e.target.value)
+//             checkAnswer();
+//     }
+
+//     function checkAnswer () {
+
+//         setCheckingAnswer(true);
+
+//         var correct_translations = [];
+
+//         word.translations.forEach(w => correct_translations.push(w.word_text));
+
+//         if (correct_translations.includes(answer)) {
+//             word.correct += 1;
+//             setMessage('correct');
+//         }
+//         else {
+//             word.mistakes += 1;
+//             setMessage('incorrect');
+//         }
+        
+//         setMessage_additional(correct_translations.join(' OR '));
+//     }
+
+//     function nextQuestion () {
+
+//         setAnswer('');
+//         setMessage('');
+//         setMessage_additional('');
+//         setCheckingAnswer(false);
+
+//         onQuestionChange(word);
+//     }
+
+//     return (<>
+//         { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
+//         <label>{ word.word_text }</label>
+//         <input id="answer" type="text" autoComplete="off" value={ answer } 
+//             ref={ ref }
+//             onChange={ (e) => setAnswer(e.target.value) }
+//             onKeyDown={ (e) => onEnter(e) }
+//             disabled={ checkingAnswer } />
+
+//         { checkingAnswer ? 
+//             <input type="button" value="Next" onClick={ nextQuestion } /> : 
+//             <input type="button" value="Check answer" onClick={ checkAnswer } disabled={ answer ? false : true } />}
+
+//         <p className={ message }>{ message }</p>
+//         <p className={ message }>{ message_additional }</p>
+//     </>);
+// }
 
 const PracticePane = ({ session, words }) => {
     console.log('render PracticePane');
@@ -124,33 +142,29 @@ const PracticePane = ({ session, words }) => {
     const [answerPane, setAnswerPane] = useState(false);
     const [message, setMessage] = useState('');
     const [message_additional, setMessage_additional] = useState('');
+    // const [word, setWord] = useState(null);
     const [trained_words] = useState([]);
 
     console.log(words);
+    
     var word;
 
     if (words.length > 0) {
         word = words[0];
-        // word = words.shift();
+        // word = words.shift()
     } else {
-        console.warn('No words to start practice!');
+        console.warn('No words to practice!');
     }
 
-    const question_answer = answerPane ? 
-        <DirectTextA 
-            word={ word } 
-            answer={ answer } 
-            message={ message } 
-            message_additional={ message_additional } /> :
-        <DirectTextQ 
-            word={ word } 
-            listening={ false } 
-            onAnswerChange={ (val) => setAnswer(val) } 
-            onCheckAnswer={ checkAnswer } />;
-    
-    const next_button = answerPane ? 
-        <NextButton onNextQuestion={ nextQuestion } /> :
-        <CheckButton answer={ answer } onCheckAnswer={ checkAnswer } />;
+    // function nextQuestion(word) {
+
+    //     trained_words.push(word);
+
+    //     if (words.length > 0)
+    //         setWord(words.shift());
+    //     else
+    //         setWord(null);
+    // }
 
     function checkAnswer () {
 
@@ -167,7 +181,7 @@ const PracticePane = ({ session, words }) => {
             setMessage('incorrect');
         }
         
-        setMessage_additional('[' + correct_translations.join(' ') + ']');
+        setMessage_additional(correct_translations.join(' OR '));
 
         trained_words.push(word);
 
@@ -180,10 +194,9 @@ const PracticePane = ({ session, words }) => {
 
 
         if (words.length > 0) {
-            word = words.shift();
+            words.shift();
         } else {
             question_answer = <></>;
-            next_button = <></>;
         }
 
         setAnswer('');
@@ -214,15 +227,35 @@ const PracticePane = ({ session, words }) => {
             });
     }
 
-    return (<>
-        <div id="practice_pane">
-            { question_answer }
-        </div>
-        <div className="controll">
-            { next_button }
+    // const question_answer = 
+    //     <DirectText 
+    //         word={ word } 
+    //         listening={ false } 
+    //         onQuestionChange={ nextQuestion } />;
+
+    const question_answer = answerPane ? 
+        <DirectTextA 
+            word={ word } 
+            answer={ answer } 
+            message={ message } 
+            message_additional={ message_additional } 
+            onNextQuestion={ nextQuestion } /> :
+        <DirectTextQ 
+            word={ word } 
+            answer={ answer }
+            listening={ false } 
+            onAnswerChange={ (val) => setAnswer(val) } 
+            onCheckAnswer={ checkAnswer } />;
+    
+    return (<div id="form_pane">
+        <div className="control">
+            {/* { next_button } */}
             <input type="submit" value="End" onClick={() => end()} />
         </div>
-    </>)
+        <div id="practice_pane">
+            { word ? question_answer : <></>}
+        </div>
+    </div>)
 }
 
 const PracticeApp = () => {
@@ -253,7 +286,7 @@ const PracticeApp = () => {
 
     return (<>
         <div>
-            Hello, World!
+            
         </div>
         { words.length > 0 ? <PracticePane session={session} words={words} /> : <></> }
     </>);

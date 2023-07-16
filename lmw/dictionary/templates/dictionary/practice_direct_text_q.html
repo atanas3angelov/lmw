@@ -22,6 +22,17 @@
         audio = document.getElementById(audio_id);
         if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
     }
+    function endPractice() {
+        var end_input = document.createElement("input");
+        end_input.setAttribute("type", "hidden");
+        end_input.setAttribute("name", "end");
+        end_input.setAttribute("value", "End");
+
+        var form = document.getElementById('form_pane');
+        form.appendChild(end_input);
+
+        form.submit();
+    }
 </script>
 
 <style>
@@ -50,6 +61,10 @@
 
 <form id="form_pane" action="{% url 'dictionary:practice' lang=lang %}" method="post">
 
+    <div class="control">
+        <input type="button" value="End" onclick="endPractice()" />
+    </div>
+
     <div id="practice_pane">
         {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
             <audio id="audio">
@@ -62,13 +77,10 @@
 
         <label>{{ word.word_text }}</label>
         <input id="answer" type="text" name="answer" autocomplete="off">
-
-        {% csrf_token %}
-    </div>
-    <div class="control">
         <input id="check_answer" type="submit" value="Check answer" disabled>
-        <input type="submit" name="end" value="End">
     </div>
+
+    {% csrf_token %}
 </form>
 
 {% endblock %}
