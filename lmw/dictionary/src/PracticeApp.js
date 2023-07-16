@@ -4,7 +4,6 @@ const base_url = 'http://localhost:8000';
 const react_url = base_url + '/dictionary/react/';
 const files_dir = base_url + '/dictionary/files/';
 
-
 const AudioButton = ({pronunciation}) => {
     console.log('render AudioButton');
 
@@ -20,153 +19,99 @@ const AudioButton = ({pronunciation}) => {
 
         return (<>
             <audio id={ audio_id }>
-                <source src={ files_dir + pronunciation } type="audio/mpeg" />
+                <source src={ audio_src_url } type="audio/mpeg" />
             </audio>
             <button type="button" onClick={ () => playAudio( audio_id ) }>
                 {/* <img src= '../../files/audio.jpg'  height="10" /> */}
-                <img src= { files_dir + 'audio.jpg' }  height="10" />
+                <img src= { button_img_src_url }  height="10" />
             </button>
         </>);
     else
         return (<></>)
 }
 
-const DirectTextQ = ({ word, answer, listening, onAnswerChange, onCheckAnswer}) => {
-    console.log('render DirectTextQ');
+// const DirectTextQ = ({ word, answer, listening, onAnswerChange, onCheckAnswer}) => {
+//     console.log('render DirectTextQ');
 
-    let word_text = listening ? '' : word.word_text;
+//     let word_text = listening ? '' : word.word_text;
 
-    const isDisabled = answer ? false : true;
-
-    function onEnter(e) {
-        if (e.key == 'Enter' && e.target.value)
-            onCheckAnswer();
-    }
-
-    return (<>
-        { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
-        <label>{ word_text }</label>
-        <input id="answer" type="text" autoComplete="off" autoFocus
-            onChange={(e) => onAnswerChange(e.target.value)}
-            onKeyDown={(e) => onEnter(e)} />
-
-        <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
-    </>);
-}
-
-const DirectTextA = ({ word, answer, message, message_additional, onNextQuestion }) => {
-    console.log('render DirectTextA');
-
-    return (<>
-        { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
-        <label>{ word.word_text }</label>
-        <input id="answer" type="text" value={ answer } disabled />
-
-        <input type="button" value="Next" onClick={ onNextQuestion } />
-
-        <p className={ message }>{ message }</p>
-        <p className={ message }>{ message_additional }</p>
-    </>);
-}
-
-// const DirectText = ({ word, listening, onQuestionChange }) => {
-//     console.log('render DirectText');
-
-//     const [answer, setAnswer] = useState('');
-//     const [checkingAnswer, setCheckingAnswer] = useState(false);
-//     const [message, setMessage] = useState('');
-//     const [message_additional, setMessage_additional] = useState('');
-//     const ref = useRef(null);
-
-//     useEffect(() => {
-//         ref.current && ref.current.focus();
-//     }, []);
+//     const isDisabled = answer ? false : true;
 
 //     function onEnter(e) {
 //         if (e.key == 'Enter' && e.target.value)
-//             checkAnswer();
-//     }
-
-//     function checkAnswer () {
-
-//         setCheckingAnswer(true);
-
-//         var correct_translations = [];
-
-//         word.translations.forEach(w => correct_translations.push(w.word_text));
-
-//         if (correct_translations.includes(answer)) {
-//             word.correct += 1;
-//             setMessage('correct');
-//         }
-//         else {
-//             word.mistakes += 1;
-//             setMessage('incorrect');
-//         }
-        
-//         setMessage_additional(correct_translations.join(' OR '));
-//     }
-
-//     function nextQuestion () {
-
-//         setAnswer('');
-//         setMessage('');
-//         setMessage_additional('');
-//         setCheckingAnswer(false);
-
-//         onQuestionChange(word);
+//             onCheckAnswer();
 //     }
 
 //     return (<>
 //         { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
-//         <label>{ word.word_text }</label>
-//         <input id="answer" type="text" autoComplete="off" value={ answer } 
-//             ref={ ref }
-//             onChange={ (e) => setAnswer(e.target.value) }
-//             onKeyDown={ (e) => onEnter(e) }
-//             disabled={ checkingAnswer } />
+//         <label>{ word_text }</label>
+//         <input id="answer" type="text" autoComplete="off" autoFocus
+//             onChange={(e) => onAnswerChange(e.target.value)}
+//             onKeyDown={(e) => onEnter(e)} />
 
-//         { checkingAnswer ? 
-//             <input type="button" value="Next" onClick={ nextQuestion } /> : 
-//             <input type="button" value="Check answer" onClick={ checkAnswer } disabled={ answer ? false : true } />}
+//         <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
+//     </>);
+// }
+
+// const DirectTextA = ({ word, answer, message, message_additional, onNextQuestion }) => {
+//     console.log('render DirectTextA');
+
+//     return (<>
+//         { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
+//         <label>{ word.word_text }</label>
+//         <input id="answer" type="text" value={ answer } disabled />
+
+//         <input type="button" value="Next" onClick={ onNextQuestion } />
 
 //         <p className={ message }>{ message }</p>
 //         <p className={ message }>{ message_additional }</p>
 //     </>);
 // }
 
-const PracticePane = ({ session, words }) => {
-    console.log('render PracticePane');
+const DirectText = ({ word, trained_words, listening, onQuestionChange }) => {
+    console.log('render DirectText');
 
     const [answer, setAnswer] = useState('');
-    const [answerPane, setAnswerPane] = useState(false);
+    const [checkingAnswer, setCheckingAnswer] = useState(false);
     const [message, setMessage] = useState('');
     const [message_additional, setMessage_additional] = useState('');
-    // const [word, setWord] = useState(null);
-    const [trained_words] = useState([]);
+    // const ref = useRef(null);
+    // const ref2 = useRef(null);
 
-    console.log(words);
-    
-    var word;
+    // useEffect(() => {
 
-    if (words.length > 0) {
-        word = words[0];
-        // word = words.shift()
-    } else {
-        console.warn('No words to practice!');
+    // }, []); // runs only on mount
+    useEffect(() => {
+
+        // ref.current && ref.current.focus();
+
+        document.getElementById('answer').focus();
+        // function handleAction(e) {
+        //     if (e.key == 'Enter')
+        //         if (checkingAnswer)
+        //             nextQuestion();
+        //         else
+        //             checkAnswer();
+        // }
+        // window.addEventListener('keydown', handleAction);
+        // return () => window.removeEventListener('scroll', handleScroll);
+
+    }); // runs after every re-render
+    // useEffect(() => {
+    //     if (!checkingAnswer)
+    //         ref.current && ref.current.focus();
+    //     // else  // doesn't work as expected
+    //     //     ref2.current && ref2.current.focus();
+    // }); // runs after every re-render
+
+    function onEnter(e) {
+        if (e.key == 'Enter' && e.target.value)
+            checkAnswer();
     }
 
-    // function nextQuestion(word) {
-
-    //     trained_words.push(word);
-
-    //     if (words.length > 0)
-    //         setWord(words.shift());
-    //     else
-    //         setWord(null);
-    // }
-
     function checkAnswer () {
+
+        setCheckingAnswer(true);
 
         var correct_translations = [];
 
@@ -180,28 +125,113 @@ const PracticePane = ({ session, words }) => {
             word.mistakes += 1;
             setMessage('incorrect');
         }
-        
-        setMessage_additional(correct_translations.join(' OR '));
 
         trained_words.push(word);
-
-        setAnswerPane(true);
+        
+        setMessage_additional(correct_translations.join(' OR '));
     }
 
     function nextQuestion () {
 
-        // decide on question type
-
-
-        if (words.length > 0) {
-            words.shift();
-        } else {
-            question_answer = <></>;
-        }
-
         setAnswer('');
-        setAnswerPane(false);
+        setMessage('');
+        setMessage_additional('');
+        setCheckingAnswer(false);
+
+        onQuestionChange(word);
     }
+
+    return (<>
+        { word.pronunciation ? <AudioButton pronunciation={ ''+word.pronunciation } /> : <></> }
+        <label>{ word.word_text }</label>
+        <input id="answer" type="text" autoComplete="off" value={ answer } 
+            onChange={ (e) => setAnswer(e.target.value) }
+            onKeyDown={ (e) => onEnter(e) }
+            disabled={ checkingAnswer } />
+
+        { checkingAnswer ? 
+            <input id='nxt' type="button" value="Next" onClick={ nextQuestion } /> : 
+            <input type="button" value="Check answer" onClick={ checkAnswer } disabled={ answer ? false : true } />}
+
+        <p className={ message }>{ message }</p>
+        <p className={ message }>{ message_additional }</p>
+    </>);
+}
+
+const PracticePane = ({ session, words }) => {
+    console.log('render PracticePane');
+
+    // const [answer, setAnswer] = useState('');
+    // const [answerPane, setAnswerPane] = useState(false);
+    // const [message, setMessage] = useState('');
+    // const [message_additional, setMessage_additional] = useState('');
+
+    const [word, setWord] = useState(null);
+    const [trained_words] = useState([]);
+
+    console.log(words);
+
+    // var word;
+
+    // if (words.length > 0) {
+    //     word = words[0];
+    //     // word = words.shift()
+    // } else {
+    //     console.warn('No words to practice!');
+    // }
+
+    useEffect(() => {
+        if (words.length > 0) {
+            setWord(words.shift())
+        } else {
+            console.warn('No words to practice!');
+        }
+    }, []);
+
+    function nextQuestion(word) {
+
+        if (words.length > 0)
+            setWord(words.shift());
+        else
+            setWord(null);
+    }
+
+    // function checkAnswer () {
+
+    //     var correct_translations = [];
+
+    //     word.translations.forEach(w => correct_translations.push(w.word_text));
+
+    //     if (correct_translations.includes(answer)) {
+    //         word.correct += 1;
+    //         setMessage('correct');
+    //     }
+    //     else {
+    //         word.mistakes += 1;
+    //         setMessage('incorrect');
+    //     }
+        
+    //     setMessage_additional(correct_translations.join(' OR '));
+
+    //     trained_words.push(word);
+
+    //     setAnswerPane(true);
+    // }
+
+    // function nextQuestion () {
+
+    //     // decide on question type
+
+
+    //     if (words.length > 0) {
+    //         words.shift();
+    //     } else {
+    //         question_answer = <></>;
+    //     }
+
+    //     setAnswer('');
+    //     setAnswerPane(false);
+    // }
 
     const end = () => {
 
@@ -227,25 +257,26 @@ const PracticePane = ({ session, words }) => {
             });
     }
 
-    // const question_answer = 
-    //     <DirectText 
-    //         word={ word } 
-    //         listening={ false } 
-    //         onQuestionChange={ nextQuestion } />;
-
-    const question_answer = answerPane ? 
-        <DirectTextA 
+    const question_answer = 
+        <DirectText 
             word={ word } 
-            answer={ answer } 
-            message={ message } 
-            message_additional={ message_additional } 
-            onNextQuestion={ nextQuestion } /> :
-        <DirectTextQ 
-            word={ word } 
-            answer={ answer }
+            trained_words={ trained_words }
             listening={ false } 
-            onAnswerChange={ (val) => setAnswer(val) } 
-            onCheckAnswer={ checkAnswer } />;
+            onQuestionChange={ nextQuestion } />;
+
+    // const question_answer = answerPane ? 
+    //     <DirectTextA 
+    //         word={ word } 
+    //         answer={ answer } 
+    //         message={ message } 
+    //         message_additional={ message_additional } 
+    //         onNextQuestion={ nextQuestion } /> :
+    //     <DirectTextQ 
+    //         word={ word } 
+    //         answer={ answer }
+    //         listening={ false } 
+    //         onAnswerChange={ (val) => setAnswer(val) } 
+    //         onCheckAnswer={ checkAnswer } />;
     
     return (<div id="form_pane">
         <div className="control">
