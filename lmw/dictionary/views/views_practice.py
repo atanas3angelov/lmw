@@ -136,8 +136,22 @@ def react_view(request):
 
             data['words'] = serialize_words(words)
 
+            # send list / lists of other words for multichoice false answers
+            if request.session['translation_direction'] == 'from':
+                data['other_words_from'] = serialize_words(
+                    get_words_for_practice('origin', len(words)), False)
+
+            elif request.session['translation_direction'] == 'to':
+                data['other_words_to'] = serialize_words(
+                    get_words_for_practice(request.session['lang'], len(words)), False)
+
+            else:  # mixed
+                data['other_words_from'] = serialize_words(
+                    get_words_for_practice('origin', len(words)), False)
+                data['other_words_to'] = serialize_words(
+                    get_words_for_practice(request.session['lang'], len(words)), False)
+
         except InsufficientWordsError as e:
-            # TODO inform frontend and let it deal with user's input
             data['error'] = str(e)
             print(e)
 
@@ -160,7 +174,7 @@ def react_view(request):
 
         return JsonResponse({'redirect_url': reverse('dictionary:practice', kwargs={'lang': lang})})
 
-    return JsonResponse({'err': 'no clue'})
+    return JsonResponse({'err': 'no clue'})  # other method types are not supported
 
 
 def download_file(_request, filename):
@@ -288,10 +302,11 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
             words = words.annotate(mc_diff=F('mistakes') - F('correct')).order_by('-mc_diff')
 
     else:
-        # TODO? order('?') can be slow -- figure out faster solution for not contiguous ids
-        words = words.order_by('?')
+        # if no other criteria is given, then the order should be based on date added descending
+        words = words.order_by('-date_added')
 
-        # word = Word.objects.filter(language=lang).order_by('?').first()
+        # # order('?') can be slow -- figure out faster solution for not contiguous ids
+        # words = words.order_by('?')
 
         # random word with raw SQL
         # cursor = connection.cursor()
@@ -316,17 +331,18 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
         return words[:n]
 
 
-def serialize_words(words):
+def serialize_words(words, include_translations=True):
 
     words_json = []
     for word in words:
         w = model_to_dict(word, fields=[field.name for field in word._meta.fields])  # no translations
 
-        # add translations
-        trs = []
-        for translation in word.translations.all():
-            trs.append(model_to_dict(translation, fields=[field.name for field in word._meta.fields]))
-        w['translations'] = trs
+        if include_translations:
+            # add translations
+            trs = []
+            for translation in word.translations.all():
+                trs.append(model_to_dict(translation, fields=[field.name for field in word._meta.fields]))
+            w['translations'] = trs
 
         words_json.append(w)
 
