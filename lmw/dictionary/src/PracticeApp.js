@@ -30,48 +30,9 @@ const AudioButton = memo(({pronunciation}) => {
         return (<></>)
 });
 
-// const DirectTextQ = ({ word, answer, listening, onAnswerChange, onCheckAnswer}) => {
-//     console.log('render DirectTextQ');
-
-//     let wordText = listening ? '' : word['word_text'];
-
-//     const isDisabled = answer ? false : true;
-
-//     function onEnter(e) {
-//         if (e.key == 'Enter' && e.target.value)
-//             onCheckAnswer();
-//     }
-
-//     return (<>
-//         { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
-//         <label>{ wordText }</label>
-//         <input id="answer" type="text" autoComplete="off" autoFocus
-//             onChange={(e) => onAnswerChange(e.target.value)}
-//             onKeyDown={(e) => onEnter(e)} />
-
-//         <input type="button" value="Check answer" onClick={ onCheckAnswer } disabled={ isDisabled } />
-//     </>);
-// }
-
-// const DirectTextA = ({ word, answer, message, messageAdditional, onNextQuestion }) => {
-//     console.log('render DirectTextA');
-
-//     return (<>
-//         { word.pronunciation ? <AudioButton pronunciation={ word.pronunciation } /> : <></> }
-//         <label>{ word['word_text'] }</label>
-//         <input id="answer" type="text" value={ answer } disabled />
-
-//         <input type="button" value="Next" onClick={ onNextQuestion } />
-
-//         <p className={ message }>{ message }</p>
-//         <p className={ message }>{ messageAdditional }</p>
-//     </>);
-// }
-
 const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listening, onQuestionChange }) => {
     console.log('render MuiltiChoice');
 
-    // const [answer, setAnswer] = useState('');
     const [answer, setAnswer, answerInputProps] = useRadioButtons("answer");
     const [checkingAnswer, setCheckingAnswer] = useState(false);
     const [message, setMessage] = useState('');
@@ -83,17 +44,16 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
                 Math.floor( Math.random() * word.translations.length ) ],
         [word]);
 
-
     const correctTranslation = useMemo(
         () => translationFrom ? 
             word.translations[
                 Math.floor( Math.random() * word.translations.length ) ] : word,
         [word]);
-
+    
     const randomPlaceOfCorrect = useMemo(
         () => Math.floor( Math.random() * 2 ),
         [word]);
-
+    
     const allAnswers = useMemo(
         () => {
             let answers = [];
@@ -109,6 +69,7 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
                     while(uniqueIds.includes(randOther.id))
                         randOther = otherWords[Math.floor( Math.random() * otherWords.length ) ];
                     answers.push(randOther);
+                    uniqueIds.push(randOther.id);
                 }
             }
             return answers;
@@ -116,17 +77,46 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
         [word, randomPlaceOfCorrect]
     );
 
-    // useEffect(() => {
-    // }, []); // runs only on mount
-    // useEffect(() => {
-    // }); // runs after every re-render
 
-    function onKey(e) {
-        // change radio select on 1, 2, 3
-
+    function handleKeyboard(e) {
+        console.log(allAnswers);
+        if (e.key == '1' ) {
+            document.getElementById(allAnswers[0].id).focus();
+            // document.getElementById(allAnswers[0].id).checked=true;
+            setAnswer(allAnswers[0].word_text);
+        }
+        if (e.key == '2') {
+            document.getElementById(allAnswers[1].id).focus();
+            // document.getElementById(allAnswers[1].id).checked=true;
+            setAnswer(allAnswers[1].word_text);
+        }
+        if (e.key == '3') {
+            document.getElementById(allAnswers[2].id).focus();
+            // document.getElementById(allAnswers[2].id).checked=true;
+            setAnswer(allAnswers[2].word_text);
+        }
         if (e.key == 'Enter')
-            checkAnswer();
+            if (!checkingAnswer)
+                checkAnswer();
+            else
+                nextQuestion()
     }
+
+    // useEffect(() => {
+    //     document.addEventListener("keydown", handleKeyboard);
+
+    // }, [word]); // runs only on mount
+    useEffect(() => {
+        document.addEventListener("keydown", handleKeyboard);
+        return () => document.removeEventListener("keydown", handleKeyboard);
+    }); // runs after every re-render
+
+    // function onKey(e) {
+    //     // change radio select on 1, 2, 3
+
+    //     if (e.key == 'Enter')
+    //         checkAnswer();
+    // }
 
     function checkAnswer () {
 
@@ -167,10 +157,6 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
         { wordFrom.pronunciation ? <AudioButton pronunciation={ wordFrom.pronunciation } /> : <></> }
         <label>{ wordFrom['word_text'] }</label>
 
-        {/* <input id="answer" type="text" autoComplete="off" value={ answer } 
-            onChange={ (e) => setAnswer(e.target.value) }
-            onKeyDown={ (e) => onEnter(e) }
-            disabled={ checkingAnswer } /> */}
         { allAnswers && allAnswers.map(possibleAnswer => 
             <p key={ possibleAnswer.id }>
                 <input 
@@ -178,7 +164,7 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
                     value={ possibleAnswer['word_text'] }
                     checked={ answer == possibleAnswer['word_text'] }
                     { ...answerInputProps }
-                    onKeyDown={ (e) => onKey(e) }
+                    // onKeyDown={ (e) => onKey(e) }
                     disabled={ checkingAnswer } />
                 <label htmlFor={ possibleAnswer.id }>
                     {possibleAnswer.word_text}
@@ -314,26 +300,12 @@ const DirectText = ({ word, translationFrom, trainedWords, listening, onQuestion
 const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
     console.log('render PracticePane');
 
-    // const [answer, setAnswer] = useState('');
-    // const [answerPane, setAnswerPane] = useState(false);
-    // const [message, setMessage] = useState('');
-    // const [messageAdditional, setMessageAdditional] = useState('');
-
     const [word, setWord] = useState(null);
     const [trainedWords] = useState([]);
     const [questionType, setQuestionType] = useState(null);
     const [translationFrom, setTranslationFrom] = useState(true);
 
     console.log(words);
-
-    // var word;
-
-    // if (words.length > 0) {
-    //     word = words[0];
-    //     // word = words.shift()
-    // } else {
-    //     console.warn('No words to practice!');
-    // }
 
     useEffect(() => {
         if (words.length > 0) {
@@ -406,43 +378,6 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
 
     }
 
-    // function checkAnswer () {
-
-    //     var correctTranslations = [];
-
-    //     word.translations.forEach(w => correctTranslations.push(w['word_text']));
-
-    //     if (correctTranslations.includes(answer)) {
-    //         word.correct += 1;
-    //         setMessage('correct');
-    //     }
-    //     else {
-    //         word.mistakes += 1;
-    //         setMessage('incorrect');
-    //     }
-        
-    //     setMessageAdditional(correctTranslations.join(' OR '));
-
-    //     trainedWords.push(word);
-
-    //     setAnswerPane(true);
-    // }
-
-    // function nextQuestion () {
-
-    //     // decide on question type
-
-
-    //     if (words.length > 0) {
-    //         words.shift();
-    //     } else {
-    //         questionAnswer = <></>;
-    //     }
-
-    //     setAnswer('');
-    //     setAnswerPane(false);
-    // }
-
     const end = () => {
 
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -494,20 +429,6 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
         default:
             <></>
     }
-
-    // const questionAnswer = answerPane ? 
-    //     <DirectTextA 
-    //         word={ word } 
-    //         answer={ answer } 
-    //         message={ message } 
-    //         messageAdditional={ messageAdditional } 
-    //         onNextQuestion={ nextQuestion } /> :
-    //     <DirectTextQ 
-    //         word={ word } 
-    //         answer={ answer }
-    //         listening={ false } 
-    //         onAnswerChange={ (val) => setAnswer(val) } 
-    //         onCheckAnswer={ checkAnswer } />;
     
     return (<div id="form_pane">
         <div className="control">

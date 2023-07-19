@@ -165,6 +165,8 @@ def react_view(request):
 
         print([w['word_text'] for w in data_dict])
 
+        # TODO update counts and last_practiced for the returned words (don't need to guard against hacky user input)
+
         lang = request.session['lang']
 
         # session clean-up before starting new one
