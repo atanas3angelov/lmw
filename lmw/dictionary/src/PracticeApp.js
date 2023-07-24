@@ -72,11 +72,20 @@ const MuiltiChoiceConnect = ({ words, trainedWords, onQuestionChange }) => {
 
     function handleKeyboard(e) {
         console.log('handler');
+
         for (let i = 1; i <= words.length; i++) {
-            if (e.key == i) {
-                document.getElementById(words[i-1]['id']).focus();
-                setQuestion(words[i-1]['id']);
-                checkAnswer();
+            if ((e.key == i) && (!correctlyAnswered.includes(words[i-1]['id']))) {
+
+                if (answer) {
+                    document.getElementById(words[i-1]['id']).focus();
+                    const event = new CustomEvent("alreadyAnsweredSetQuestion", {detail: words[i-1]['id']});
+                    checkAnswer(event);
+                }
+                else {
+                    document.getElementById(words[i-1]['id']).focus();
+                    setQuestion(words[i-1]['id']);
+                    checkAnswer();
+                }
             }
         }
         if ((e.key == 'Enter') && (correctlyAnswered.length == words.length))
@@ -84,19 +93,9 @@ const MuiltiChoiceConnect = ({ words, trainedWords, onQuestionChange }) => {
     }
 
     useEffect(() => {
-        // check anser on each re-render
-        
-
         document.addEventListener("keydown", handleKeyboard);
         return () => document.removeEventListener("keydown", handleKeyboard);
     }); // runs after every re-render
-
-    // function onKey(e) {
-    //     // change radio select on 1, 2, 3
-
-    //     if (e.key == 'Enter')
-    //         checkAnswer();
-    // }
 
     function checkAnswerInner(q, a) {
         if (q && a) {
@@ -105,15 +104,19 @@ const MuiltiChoiceConnect = ({ words, trainedWords, onQuestionChange }) => {
 
             if (q == a) {
                 word['correct'] += 1;
+
                 trainedWords.push(word);
                 correctlyAnswered.push(word['id']);
-                // prevent disabling of radio to stuck listener
+
+                // prevent disabling of radio in stucking the listener
                 document.activeElement.blur();
+
                 setQuestion('');
                 setAnswer('');
             }
             else {
                 word['mistakes'] += 1;
+
                 setQuestion('');
                 setAnswer('');
             }
@@ -122,42 +125,33 @@ const MuiltiChoiceConnect = ({ words, trainedWords, onQuestionChange }) => {
 
     function checkAnswer(e) {
 
-        console.log(question);
-        console.log(answer);
-        console.log(e);
-
-        if (e && e.target.name == 'question') {
-            if (answer) {
-                checkAnswerInner(e.target.value, answer);
-            }
-            else {
-                setQuestion(Number(e.target.value));
-            }
+        // if using keyboard to set question when answer already set
+        if (e && e.type == 'alreadyAnsweredSetQuestion') {
+            checkAnswerInner(e.detail, answer);
         }
+        else { // if using mouse clicks
+            if (e && e.target.name == 'question') {
+                if (answer) {
+                    checkAnswerInner(e.target.value, answer);
+                }
+                else {
+                    setQuestion(Number(e.target.value));
+                }
+            }
+    
+            if (e && e.target.name == 'answer') {
+                if (question) {
+                    checkAnswerInner(question, e.target.value);
+                }
+                else {
+                    setAnswer(Number(e.target.value));
+                }
+            }
 
-        if (e && e.target.name == 'answer') {
-            if (question) {
-                checkAnswerInner(question, e.target.value);
-            }
-            else {
-                setAnswer(Number(e.target.value));
-            }
+            // if using keyboard to set question when no answer already set
+            checkAnswerInner(question, answer);
         }
-
-        // if using the keyboard (it won't activate on current state change)
-        checkAnswerInner(question, answer);
     }
-
-    // function selectQuestion(e) {
-    //     console.log(e.target);
-    //     setQuestion(Number(e.target.value));
-    //     // checkAnswer();
-    // }
-
-    // function selectAnswer(e) {
-    //     setAnswer(Number(e.target.value));
-    //     // checkAnswer();
-    // }
 
     function nextQuestion () {
 
@@ -198,8 +192,7 @@ const MuiltiChoiceConnect = ({ words, trainedWords, onQuestionChange }) => {
                                         value={ Object.keys(rightWord).map(Number)[0] } 
                                         checked={ answer == Object.keys(rightWord)[0] }
                                         disabled={ correctlyAnswered.includes(Object.keys(rightWord).map(Number)[0]) }
-                                        onChange={ checkAnswer } 
-                                        onKeyDown={ console.log('D') } />
+                                        onChange={ checkAnswer } />
                                     <label htmlFor={ rightWord[Object.keys(rightWord)[0]]['id'] }>
                                         { rightWord[Object.keys(rightWord)[0]]['word_text'] }
                                     </label>
@@ -263,22 +256,17 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
 
 
     function handleKeyboard(e) {
-        console.log(allAnswers);
-        if (e.key == '1' ) {
-            document.getElementById(allAnswers[0]['id']).focus();
-            // document.getElementById(allAnswers[0].id).checked=true;
-            setAnswer(allAnswers[0]['word_text']);
+        console.log('handler');
+
+        if (!checkingAnswer) {
+            for (let i = 1; i <= 3; i++) {
+                if (e.key == i) {
+                    document.getElementById(allAnswers[i-1]['id']).focus();
+                    setAnswer(allAnswers[i-1]['word_text']);
+                }
+            }
         }
-        if (e.key == '2') {
-            document.getElementById(allAnswers[1]['id']).focus();
-            // document.getElementById(allAnswers[1].id).checked=true;
-            setAnswer(allAnswers[1]['word_text']);
-        }
-        if (e.key == '3') {
-            document.getElementById(allAnswers[2]['id']).focus();
-            // document.getElementById(allAnswers[2].id).checked=true;
-            setAnswer(allAnswers[2]['word_text']);
-        }
+
         if ((e.key == 'Enter') && (answer))
             if (!checkingAnswer)
                 checkAnswer();
@@ -294,13 +282,6 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
         document.addEventListener("keydown", handleKeyboard);
         return () => document.removeEventListener("keydown", handleKeyboard);
     }); // runs after every re-render
-
-    // function onKey(e) {
-    //     // change radio select on 1, 2, 3
-
-    //     if (e.key == 'Enter')
-    //         checkAnswer();
-    // }
 
     function checkAnswer () {
 

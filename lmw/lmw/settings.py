@@ -63,7 +63,7 @@ MIDDLEWARE = [
 
 WEBPACK_LOADER = {
     "DEFAULT": {
-        "BUNDLE_DIR_NAME": "frontend/",
+        "BUNDLE_DIR_NAME": "reactFrontend/",
         "STATS_FILE": os.path.join(BASE_DIR, "webpack-stats.json")
     }
 }

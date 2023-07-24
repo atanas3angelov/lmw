@@ -4,7 +4,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
   entry: {
-    frontend: './dictionary/src/index.js',
+    reactFrontend: './dictionary/src/index.js',
   },
   output: {
     path: path.resolve('./dictionary/static/dictionary/'),
