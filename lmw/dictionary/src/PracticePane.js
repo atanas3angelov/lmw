@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DirectText from './DirectText';
 import MuiltiChoice from './MultipleChoice';
 import MuiltiChoiceConnect from './MultipleChoiceConnect';
@@ -29,30 +29,35 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
         decideOnTranslationDirection();
     }, []);
 
+    const allowedQuestionTypes = useMemo(
+        () => {
+
+            let allowed = [];
+
+            if (session['direct_text'])
+                allowed.push('direct_text');
+            if (session['multiple_choice'])
+                allowed.push('multiple_choice');
+            if (session['multiple_choice_connect'])
+                allowed.push('multiple_choice_connect');
+            if (session['listening'])
+                allowed.push('listening');
+            if (session['listening_multiple_choice'])
+                allowed.push('listening_multiple_choice');
+            
+            if (allowed.length == 0)
+                allowed = [
+                    'direct_text', 
+                    'multiple_choice', 
+                    'multiple_choice_connect',
+                    'listening',
+                    'listening_multiple_choice'
+                ];
+            
+            return allowed;
+        }, [session]);
+
     function decideOnQuestionType() {
-
-        // TODO use react memo for allowed computation
-        let allowedQuestionTypes = [];
-
-        if (session['direct_text'])
-            allowedQuestionTypes.push('direct_text');
-        if (session['multiple_choice'])
-            allowedQuestionTypes.push('multiple_choice');
-        if (session['multiple_choice_connect'])
-            allowedQuestionTypes.push('multiple_choice_connect');
-        if (session['listening'])
-            allowedQuestionTypes.push('listening');
-        if (session['listening_multiple_choice'])
-            allowedQuestionTypes.push('listening_multiple_choice');
-        
-        if (allowedQuestionTypes.length == 0)
-            allowedQuestionTypes = [
-                'direct_text', 
-                'multiple_choice', 
-                'multiple_choice_connect',
-                'listening',
-                'listening_multiple_choice'
-            ];
         
         // select one at random
         setQuestionType(allowedQuestionTypes[Math.floor( Math.random() * allowedQuestionTypes.length )]);
@@ -69,6 +74,16 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
             else
                 setTranslationFrom(false);
         }
+    }
+
+    function practiceAsListening(word, questionType) {
+
+        if (word && word['pronunciation'] && 
+            (questionType == 'listening' || questionType == 'listening_multiple_choice')) {
+                return true;
+        }
+
+        return false;
     }
 
     function nextQuestion() {
@@ -113,22 +128,24 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
     let questionAnswer;
     switch (questionType) {
         case 'direct_text':
+        case 'listening':
             questionAnswer = 
                 <DirectText 
                     word={ word } 
                     translationFrom = { translationFrom } 
                     trainedWords={ trainedWords }
-                    listening={ false } 
+                    listening={ practiceAsListening(word, questionType) } 
                     onQuestionChange={ nextQuestion } />;
             break;
         case 'multiple_choice':
+        case 'listening_multiple_choice':
             questionAnswer = 
                 <MuiltiChoice 
                     word={ word } 
                     translationFrom = { translationFrom } 
                     otherWords={ translationFrom ? otherWordsFrom: otherWordsTo } 
                     trainedWords={ trainedWords } 
-                    listening={ false } 
+                    listening={ practiceAsListening(word, questionType) } 
                     onQuestionChange={ nextQuestion } />;
             break;
         case 'multiple_choice_connect':
@@ -138,9 +155,6 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
             const mccNumOfWords = (words.length + 1 >= 4) ? 4 : words.length + 1;
 
             mccWords.push(word);
-            // for (let i = 1; i < mccNumOfWords; i++) {
-            //     mccWords.push(words.shift());
-            // }
             mccWords.push(...words.splice(0, mccNumOfWords-1));
 
             questionAnswer = 
@@ -149,8 +163,6 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
                     trainedWords={ trainedWords } 
                     onQuestionChange={ nextQuestion }/>
             break;
-        case 'listening':
-        case 'listening_multiple_choice':
         default:
             <></>
     }
@@ -160,7 +172,13 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
             <input type="submit" value="End" onClick={() => end()} />
         </div>
         <div id="practice_pane">
-            { word ? translationFrom ? <h4>Translate from {session['lang']}:</h4>: <h4>Translate to {session['lang']}</h4> : <></> }
+            { word ?
+                questionType != 'multiple_choice_connect' ? 
+                    translationFrom ? 
+                        <h4>Translate from {session['lang']}:</h4> : 
+                        <h4>Translate to {session['lang']}</h4> : 
+                    <h4>Connect the words</h4> :
+                <></> }
             { word ? questionAnswer : <></>}
         </div>
     </div>)

@@ -8,8 +8,6 @@ const DirectText = ({ word, translationFrom, trainedWords, listening, onQuestion
     const [checkingAnswer, setCheckingAnswer] = useState(false);
     const [message, setMessage] = useState('');
     const [messageAdditional, setMessageAdditional] = useState('');
-    // const ref = useRef(null);
-    // const ref2 = useRef(null);
 
     const wordFrom = useMemo(
         () => translationFrom ? 
@@ -18,46 +16,40 @@ const DirectText = ({ word, translationFrom, trainedWords, listening, onQuestion
             [word]);
 
     function handleKeyboard(e) {
-        if ((e.key == 'Enter') && (answer))
+
+        if(e.key == 0 && wordFrom['pronunciation']) {
+            document.getElementById(wordFrom['pronunciation'].split('.')[0]).play();
+        }
+
+        if((e.key == 'Enter') && (answer))
             if (!checkingAnswer)
                 checkAnswer();
             else
                 nextQuestion()
     }
-        
-    // useEffect(() => {
 
-    // }, []); // runs only on mount
+    function handleAfterAudioPlayed() {
+        document.getElementById('answer').focus();
+    }
+    
+    function answerChanged(e) {
+
+        if(e.target.value.slice(-1) == '0') {
+            e.target.value = e.target.value.slice(0, -1);
+        }
+        else {
+            setAnswer(e.target.value);
+        }
+    }
+
     useEffect(() => {
-
-        // ref.current && ref.current.focus();
 
         document.getElementById('answer').focus();
 
         document.addEventListener("keydown", handleKeyboard);
         return () => document.removeEventListener("keydown", handleKeyboard);
-        // function handleAction(e) {
-        //     if (e.key == 'Enter')
-        //         if (checkingAnswer)
-        //             nextQuestion();
-        //         else
-        //             checkAnswer();
-        // }
-        // window.addEventListener('keydown', handleAction);
-        // return () => window.removeEventListener('scroll', handleScroll);
 
     }); // runs after every re-render
-    // useEffect(() => {
-    //     if (!checkingAnswer)
-    //         ref.current && ref.current.focus();
-    //     // else  // doesn't work as expected
-    //     //     ref2.current && ref2.current.focus();
-    // }); // runs after every re-render
-
-    // function onEnter(e) {
-    //     if (e.key == 'Enter' && e.target.value)
-    //         checkAnswer();
-    // }
 
     function checkAnswer () {
 
@@ -95,11 +87,15 @@ const DirectText = ({ word, translationFrom, trainedWords, listening, onQuestion
     }
 
     return (<>
-        { wordFrom.pronunciation ? <AudioButton pronunciation={ wordFrom.pronunciation } /> : <></> }
-        <label>{ wordFrom['word_text'] }</label>
+        { wordFrom.pronunciation ? <AudioButton pronunciation={ wordFrom.pronunciation } onPressed={ handleAfterAudioPlayed } /> : <></> }
+        <label>
+            { listening && translationFrom && !checkingAnswer ? 
+                /* only hide the word if translating from unknown language and not checking the answer */
+                '-'.repeat(wordFrom['word_text'].length) : 
+                wordFrom['word_text'] }
+        </label>
         <input id="answer" type="text" autoComplete="off" value={ answer } 
-            onChange={ (e) => setAnswer(e.target.value) }
-            // onKeyDown={ (e) => onEnter(e) }
+            onChange={ answerChanged }
             disabled={ checkingAnswer } />
 
         { checkingAnswer ? 

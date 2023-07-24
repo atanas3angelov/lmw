@@ -61,6 +61,10 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
             }
         }
 
+        if(e.key == 0 && wordFrom['pronunciation']) {
+            document.getElementById(wordFrom['pronunciation'].split('.')[0]).play();
+        }
+
         if ((e.key == 'Enter') && (answer))
             if (!checkingAnswer)
                 checkAnswer();
@@ -68,10 +72,6 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
                 nextQuestion()
     }
 
-    // useEffect(() => {
-    //     document.addEventListener("keydown", handleKeyboard);
-
-    // }, [word]); // runs only on mount
     useEffect(() => {
         document.addEventListener("keydown", handleKeyboard);
         return () => document.removeEventListener("keydown", handleKeyboard);
@@ -114,7 +114,12 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
 
     return (<>
         { wordFrom['pronunciation'] ? <AudioButton pronunciation={ wordFrom['pronunciation'] } /> : <></> }
-        <label>{ wordFrom['word_text'] }</label>
+        <label>
+            { listening && translationFrom && !checkingAnswer ? 
+                /* only hide the word if translating from unknown language and not checking the answer */
+                '-'.repeat(wordFrom['word_text'].length) : 
+                wordFrom['word_text'] }
+        </label>
 
         { allAnswers && allAnswers.map(possibleAnswer => 
             <p key={ possibleAnswer['id'] }>
@@ -123,10 +128,18 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
                     value={ possibleAnswer['word_text'] }
                     checked={ answer == possibleAnswer['word_text'] }
                     { ...answerInputProps }
-                    // onKeyDown={ (e) => onKey(e) }
                     disabled={ checkingAnswer } />
+                { 
+                    possibleAnswer['pronunciation'] ? 
+                        <AudioButton pronunciation={ possibleAnswer['pronunciation'] } /> : 
+                        <></>
+                }
                 <label htmlFor={ possibleAnswer['id'] }>
-                    { possibleAnswer['word_text'] }
+                    {
+                        listening && !translationFrom && !checkingAnswer && possibleAnswer['pronunciation'] ? 
+                            '-'.repeat(possibleAnswer['word_text'].length) : 
+                            possibleAnswer['word_text']
+                    }
                 </label>
             </p>
         )}
