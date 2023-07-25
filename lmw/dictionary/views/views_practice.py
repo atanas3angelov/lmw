@@ -270,6 +270,7 @@ def get_random_from(allowed_question_types):
     return allowed_question_types[r]
 
 
+# TODO if only listening exercises are selected, filter words only for listening (else user sad :( )
 def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistaken=False, infrequently_practiced=False):
     """
     get words based on specifications

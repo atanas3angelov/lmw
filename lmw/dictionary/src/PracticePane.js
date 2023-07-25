@@ -79,14 +79,26 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
     function practiceAsListening(word, questionType) {
 
         if (word && word['pronunciation'] && 
-            (questionType == 'listening' || questionType == 'listening_multiple_choice')) {
+            (questionType == 'listening' || questionType == 'listening_multiple_choice'))
                 return true;
-        }
 
         return false;
     }
 
-    function nextQuestion() {
+    function practiceGender() {
+
+        if (word && session['gender_oriented'] && 
+            word['word_type'] == 'n')
+            return true;
+        
+        return false;
+    }
+
+    function nextQuestion(w) {
+        
+        // redo a word
+        if (w)
+            words.push(w);
 
         if (words.length > 0)
             setWord(words.shift());
@@ -135,6 +147,8 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
                     translationFrom = { translationFrom } 
                     trainedWords={ trainedWords }
                     listening={ practiceAsListening(word, questionType) } 
+                    practiceNounGender={ practiceGender() } 
+                    redo={ session['redo_until_correct'] } 
                     onQuestionChange={ nextQuestion } />;
             break;
         case 'multiple_choice':
@@ -146,6 +160,7 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
                     otherWords={ translationFrom ? otherWordsFrom: otherWordsTo } 
                     trainedWords={ trainedWords } 
                     listening={ practiceAsListening(word, questionType) } 
+                    redo={ session['redo_until_correct'] }
                     onQuestionChange={ nextQuestion } />;
             break;
         case 'multiple_choice_connect':
@@ -175,7 +190,9 @@ const PracticePane = ({ session, words, otherWordsFrom, otherWordsTo }) => {
             { word ?
                 questionType != 'multiple_choice_connect' ? 
                     translationFrom ? 
-                        <h4>Translate from {session['lang']}:</h4> : 
+                        practiceGender() ? 
+                            <h4>Translate from {session['lang']} and pick gender:</h4> : 
+                            <h4>Translate from {session['lang']}:</h4> : 
                         <h4>Translate to {session['lang']}</h4> : 
                     <h4>Connect the words</h4> :
                 <></> }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import AudioButton from './AudioButton';
 
-const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listening, onQuestionChange }) => {
+const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listening, redo, onQuestionChange }) => {
     console.log('render MuiltiChoice');
 
     const [answer, setAnswer, answerInputProps] = useRadioButtons("answer");
@@ -81,6 +81,8 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
 
         setCheckingAnswer(true);
 
+        let r = true; // redo current word (can't use message=='incorrect')
+
         var correctTranslations = [];
 
         if (translationFrom)
@@ -91,25 +93,37 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
         if (correctTranslations.includes(answer)) {
             word.correct += 1;
             setMessage('correct');
+            r = false;
         }
         else {
             word.mistakes += 1;
             setMessage('incorrect');
         }
 
-        trainedWords.push(word);
+        if (redo) {
+            if (!r)   // redo current word (can't use message=='incorrect')
+                trainedWords.push(word);
+        }
+        else {
+            trainedWords.push(word);
+        }
         
         setMessageAdditional(correctTranslations.join(' OR '));
     }
 
     function nextQuestion () {
 
+        let wrong = message == 'incorrect' ? true : false;
+
         setAnswer('');
         setMessage('');
         setMessageAdditional('');
         setCheckingAnswer(false);
 
-        onQuestionChange();
+        if (redo && wrong)
+            onQuestionChange(word);
+        else
+            onQuestionChange();
     }
 
     return (<>
@@ -124,7 +138,7 @@ const MuiltiChoice = ({ word, translationFrom, otherWords, trainedWords, listeni
         { allAnswers && allAnswers.map(possibleAnswer => 
             <p key={ possibleAnswer['id'] }>
                 <input 
-                    id ={ possibleAnswer['id'] } 
+                    id={ possibleAnswer['id'] } 
                     value={ possibleAnswer['word_text'] }
                     checked={ answer == possibleAnswer['word_text'] }
                     { ...answerInputProps }

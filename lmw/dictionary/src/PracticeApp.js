@@ -64,3 +64,5 @@ export {
     filesDir,
     PracticeApp as default
 }
+
+// TODO add statistics to current day and previous day/week/etc. words practiced
