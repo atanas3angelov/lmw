@@ -159,13 +159,15 @@ def react_view(request):
 
     if request.method == 'POST':
 
-        # print('Raw Data: "%s"' % request.body)
-
         data_dict = json.loads(request.body)
 
-        print([w['word_text'] for w in data_dict])
-
-        # TODO update counts and last_practiced for the returned words (don't need to guard against hacky user input)
+        # update counts and last_practiced for returned words (don't need to guard against hacky user input)
+        for w in data_dict:
+            # update row in database without fetching and deserializing it
+            Word.objects.filter(id=w['id']).update(
+                correct=w['correct'],
+                mistakes=w['mistakes'],
+                last_practiced=timezone.now())
 
         lang = request.session['lang']
 
