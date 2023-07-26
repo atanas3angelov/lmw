@@ -5,6 +5,11 @@
 {% block content %}
 
 <script type="text/javascript">
+    {% if answer %}
+    window.onload = function() {
+        document.getElementById("next").focus();
+    }
+    {% else %}
     window.onload = function() {
         document.getElementById("answer").focus();
 
@@ -18,6 +23,8 @@
             });
         } catch (err) {}
     }
+    {% endif %}
+
     function playAudio(audio_id) {
         audio = document.getElementById(audio_id);
         if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
@@ -76,9 +83,19 @@
         {% endif %}
 
         <label>{{ word.word_text }}</label>
+        {% if answer %}
+        <input id="answer" type="text" value="{{ answer }}" disabled>
+        <input id="next" type="submit" value="Next">
+        {% else %}
         <input id="answer" type="text" name="answer" autocomplete="off">
         <input id="check_answer" type="submit" value="Check answer" disabled>
+        {% endif %}
     </div>
+
+    {% if answer %}
+    <p class="{{ message }}">{{ message }}</p>
+    <p class="{{ message }}">{{ message_additional }}</p>
+    {% endif %}
 
     {% csrf_token %}
 </form>

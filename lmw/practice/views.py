@@ -2,9 +2,9 @@ import random
 import json
 import urllib
 
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render
 from django.utils import timezone
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpResponseNotFound
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
 from django.urls import reverse
 from django.forms import model_to_dict
 from django.db.models import F
@@ -72,7 +72,7 @@ def practice_view(request, lang=''):
                     # TODO question_direction to decide word (but keep word_id as is)
                     context['word'] = word
 
-                    return render(request, "practice/practice_direct_text_q.html", context)
+                    return render(request, "practice/practice_direct_text.html", context)
 
                 # TODO do the rest question_type responses to set a question
 
@@ -105,7 +105,7 @@ def practice_view(request, lang=''):
                     # TODO question_direction reference word_text
                     context['message_additional'] = ' OR '.join(translations)
 
-                    return render(request, "practice/practice_direct_text_a.html", context)
+                    return render(request, "practice/practice_direct_text.html", context)
 
                 # TODO do the rest question_type responses to check an answer
 
@@ -173,8 +173,6 @@ def react_view(request):
 
         # session clean-up before starting new one
         request.session.flush()
-
-        # return redirect("practice:practice", lang=lang)
 
         return JsonResponse({'redirect_url': reverse('practice:practice', kwargs={'lang': lang})})
 
@@ -307,12 +305,13 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
             words = words.annotate(mc_diff=F('mistakes') - F('correct')).order_by('-mc_diff')
 
     else:
-        # if no other criteria is given, then the order should be based on date added descending
-        # words = words.order_by('-date_added')
-        # TODO if it is not random the backend exercise always returns the same word to practice
+        # if no other criteria is given, then the order should be based on last_practiced ascending
+        # so that the backend can return different word to practice
+        # (biased on last_practiced, if not explicitly selected in order to avoid SQL heavy randomizing)
+        words = words.order_by('last_practiced')
 
         # # order('?') can be slow -- figure out faster solution for not contiguous ids
-        words = words.order_by('?')
+        # words = words.order_by('?')
 
         # random word with raw SQL
         # cursor = connection.cursor()
