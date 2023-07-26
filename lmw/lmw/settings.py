@@ -1,3 +1,5 @@
+import os
+
 """
 Django settings for lmw project.
 
@@ -31,6 +33,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'webpack_loader',
+    # 'corsheaders',
     'dictionary.apps.DictionaryConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,12 +47,26 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:8000',
+# ]
+
+# CORS_ALLOW_ALL_ORIGINS = True
+
+WEBPACK_LOADER = {
+    "DEFAULT": {
+        "BUNDLE_DIR_NAME": "reactFrontend/",
+        "STATS_FILE": os.path.join(BASE_DIR, "webpack-stats.json")
+    }
+}
 
 ROOT_URLCONF = 'lmw.urls'
 
@@ -116,7 +134,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

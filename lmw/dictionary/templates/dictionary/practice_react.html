@@ -1,0 +1,49 @@
+{% extends "dictionary/base.html" %}
+
+{% load render_bundle from webpack_loader %}
+
+{% block title %} Practice {% endblock %}
+
+{% block content %}
+
+    <style>
+        #form_pane {
+            width: 400px;
+            height: 300px;
+        }
+        #practice_pane {
+            padding-top: 10%;
+        }
+        #answer{
+            display: block;
+        }
+        .control {
+            float: right;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        .male {
+            color: white;
+            background-color:rgb(0,0,200);
+        }
+        .female {
+            color: white;
+            background-color:rgb(255,0,0);
+        }
+        .neutral {
+            color: white;
+            background-color:rgb(125,125,125);
+        }
+
+    </style>
+
+    <div id="app"></div>
+    {% render_bundle 'reactFrontend' %}
+
+    {% csrf_token %}
+
+{% endblock %}

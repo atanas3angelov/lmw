@@ -1,1 +1,4 @@
 /venv/
+/lmw/nodejs_check.js
+/lmw/node_modules/
+/lmw/webpack-stats.json
