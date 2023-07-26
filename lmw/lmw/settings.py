@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'webpack_loader',
     # 'corsheaders',
     'dictionary.apps.DictionaryConfig',
+    'practice.apps.PracticeConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

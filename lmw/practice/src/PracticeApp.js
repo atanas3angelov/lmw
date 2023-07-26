@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PracticePane from './PracticePane';
 
 const baseUrl = 'http://localhost:8000';
-const reactUrl = baseUrl + '/dictionary/react/';
-const filesDir = baseUrl + '/dictionary/files/';
+const reactUrl = baseUrl + '/practice/react/';
+const filesDir = baseUrl + '/practice/files/';
 
 const PracticeApp = () => {
     console.log('render PracticeApp');

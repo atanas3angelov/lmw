@@ -6,14 +6,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpResponseNotFound
 from django.urls import reverse
-from django.db.models import F
 from django.forms import model_to_dict
-from django.db import connection
+from django.db.models import F
+# from django.db import connection
 from django.conf import settings
 
-from .views_dictionary import get_lang_menu, files_dir
-from ..models import Word, Translation
-from ..exceptions.InsufficientWordsError import InsufficientWordsError
+from dictionary.views import get_lang_menu, files_dir
+from dictionary.models import Word, Translation
+from .exceptions.InsufficientWordsError import InsufficientWordsError
 
 
 def practice_view(request, lang=''):
@@ -25,7 +25,7 @@ def practice_view(request, lang=''):
 
         if lang == 'origin':    # don't allow practice for 'origin'
             context["user_error"] = 'Change language to anything but "origin" in order to practice!'
-            return render(request, "dictionary/practice.html", context)
+            return render(request, "practice/practice.html", context)
 
         if request.POST.get('start', False):
             # ini session setting preferences
@@ -40,7 +40,7 @@ def practice_view(request, lang=''):
 
                 request.session.flush()
                 context['error_message'] = f'POST param {e.args[0]} is required'
-                return render(request, "dictionary/practice.html", context)
+                return render(request, "practice/practice.html", context)
 
         # handle question / answer
         if request.session.get('started', False):
@@ -48,11 +48,11 @@ def practice_view(request, lang=''):
             # abort session and return to practice setup
             if request.POST.get('end', False):
                 request.session.flush()
-                return render(request, "dictionary/practice.html", context)
+                return render(request, "practice/practice.html", context)
 
             # word_num: limited  -> activate react frontend
             if request.session['word_num'] == 'fixed':
-                return render(request, "dictionary/practice_react.html", context)
+                return render(request, "practice/practice_react.html", context)
 
             # word_num: unlimited -> do everything in backend
             # TODO guard/recover from browser refresh/back
@@ -72,7 +72,7 @@ def practice_view(request, lang=''):
                     # TODO question_direction to decide word (but keep word_id as is)
                     context['word'] = word
 
-                    return render(request, "dictionary/practice_direct_text_q.html", context)
+                    return render(request, "practice/practice_direct_text_q.html", context)
 
                 # TODO do the rest question_type responses to set a question
 
@@ -105,7 +105,7 @@ def practice_view(request, lang=''):
                     # TODO question_direction reference word_text
                     context['message_additional'] = ' OR '.join(translations)
 
-                    return render(request, "dictionary/practice_direct_text_a.html", context)
+                    return render(request, "practice/practice_direct_text_a.html", context)
 
                 # TODO do the rest question_type responses to check an answer
 
@@ -116,7 +116,7 @@ def practice_view(request, lang=''):
         langs, lang = get_lang_menu(lang)
         context = {"langs": langs, "lang": lang}
 
-        return render(request, "dictionary/practice.html", context)
+        return render(request, "practice/practice.html", context)
 
 
 def react_view(request):
@@ -174,9 +174,9 @@ def react_view(request):
         # session clean-up before starting new one
         request.session.flush()
 
-        # return redirect("dictionary:practice", lang=lang)
+        # return redirect("practice:practice", lang=lang)
 
-        return JsonResponse({'redirect_url': reverse('dictionary:practice', kwargs={'lang': lang})})
+        return JsonResponse({'redirect_url': reverse('practice:practice', kwargs={'lang': lang})})
 
     return JsonResponse({'err': 'no clue'})  # other method types are not supported
 
@@ -308,10 +308,11 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
 
     else:
         # if no other criteria is given, then the order should be based on date added descending
-        words = words.order_by('-date_added')
+        # words = words.order_by('-date_added')
+        # TODO if it is not random the backend exercise always returns the same word to practice
 
         # # order('?') can be slow -- figure out faster solution for not contiguous ids
-        # words = words.order_by('?')
+        words = words.order_by('?')
 
         # random word with raw SQL
         # cursor = connection.cursor()

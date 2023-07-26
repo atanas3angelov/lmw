@@ -5,10 +5,6 @@ app_name = 'dictionary'
 
 urlpatterns = [
     path("", views.index, name="index"),  # GET -> main menu
-
-    path("react/", views.react_view, name="react"),
-    path("files/<str:filename>", views.download_file, name='download_file'),
-
     path("<str:lang>/words/", views.words_view, name="words"),  # GET -> all, POST -> add word
     path("<str:lang>/forms/new_word/", views.new_word, name="new_word_form"),  # GET -> new word form
     path("<str:lang>/words/<int:word_id>", views.word_view, name="word"),  # POST -> fancy update, DELETE, GET
@@ -18,9 +14,6 @@ urlpatterns = [
     path("languages/<int:language_id>", views.delete_language, name="delete_language"),  # any -> delete lang
 
     path("<str:lang>/", views.index, name="index"),  # GET -> main menu
-
-    path("<str:lang>/practice/", views.practice_view, name="practice"),
-
 ]
 
 '''

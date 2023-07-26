@@ -6,21 +6,10 @@
 
 <script type="text/javascript">
     window.onload = function() {
-        document.getElementById("answer").focus();
-
-        try {
-            document.getElementById("answer")
-                .addEventListener("keyup", function(event) {
-                    playAudio("audio");
-                    if (this.value != '') {
-                        document.getElementById("check_answer").disabled = false;
-                    }
-            });
-        } catch (err) {}
+        document.getElementById("next").focus();
     }
     function playAudio(audio_id) {
-        audio = document.getElementById(audio_id);
-        if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
+        document.getElementById(audio_id).play();
     }
     function endPractice() {
         var end_input = document.createElement("input");
@@ -59,7 +48,7 @@
 
 {% load static %}
 
-<form id="form_pane" action="{% url 'dictionary:practice' lang=lang %}" method="post">
+<form id="form_pane" action="{% url 'practice:practice' lang=lang %}" method="post">
 
     <div class="control">
         <input type="button" value="End" onclick="endPractice()" />
@@ -76,9 +65,12 @@
         {% endif %}
 
         <label>{{ word.word_text }}</label>
-        <input id="answer" type="text" name="answer" autocomplete="off">
-        <input id="check_answer" type="submit" value="Check answer" disabled>
+        <input id="answer" type="text" value="{{ answer }}" disabled>
+        <input id="next" type="submit" value="Next">
     </div>
+
+    <p class="{{ message }}">{{ message }}</p>
+    <p class="{{ message }}">{{ message_additional }}</p>
 
     {% csrf_token %}
 </form>

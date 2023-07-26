@@ -16,7 +16,7 @@
 <h3 style="color: red">{{ user_error }}</h3>
 {% endif %}
 
-<form action="{% url 'dictionary:practice' lang=lang %}" method="post">
+<form action="{% url 'practice:practice' lang=lang %}" method="post">
     <fieldset>
         <legend>Number of words to include in practice</legend>
 
