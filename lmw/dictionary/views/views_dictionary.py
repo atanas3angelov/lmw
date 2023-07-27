@@ -67,6 +67,7 @@ def words_view(request, lang=''):
 
     langs, lang = get_lang_menu(lang)
 
+    # add new word
     if request.method == "POST":
 
         try:
@@ -131,8 +132,8 @@ def words_view(request, lang=''):
 
             return render(request, "dictionary/new_word.html", context)
 
+    # GET -> return all words
     else:
-        # GET -> return all words
 
         words = Word.objects.filter(language=lang)
 
@@ -145,6 +146,7 @@ def words_view(request, lang=''):
         return render(request, "dictionary/words.html", context)
 
 
+# form to add word (actual adding happens in words_view after form submitted)
 def new_word(request, lang=''):
 
     langs, lang = get_lang_menu(lang)
@@ -189,7 +191,8 @@ def word_view(request, word_id, lang=''):
 
         return redirect("dictionary:words", lang=lang)
 
-    elif request.method == "POST":  # fancy update
+    # fancy update
+    elif request.method == "POST":
 
         try:
             # Update for main word
@@ -315,8 +318,8 @@ def word_view(request, word_id, lang=''):
 
         return redirect("dictionary:word", lang=lang, word_id=word.id)
 
+    # GET -> return word detail
     else:
-        # GET -> return word detail
 
         translations, synonyms = get_translations_and_synonyms(word_id)
 
@@ -331,6 +334,7 @@ def word_view(request, word_id, lang=''):
         return render(request, "dictionary/word.html", context)
 
 
+# form to edit word (actual editing happens in word_view after form submitted)
 def edit_word(request, word_id, lang=''):
 
     langs, lang = get_lang_menu(lang)

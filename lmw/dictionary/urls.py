@@ -10,7 +10,7 @@ urlpatterns = [
     path("<str:lang>/words/<int:word_id>", views.word_view, name="word"),  # POST -> fancy update, DELETE, GET
     path("<str:lang>/forms/edit_word/<int:word_id>", views.edit_word, name="edit_word_form"),  # GET -> update word form
 
-    path("languages/", views.languages_view, name="languages"),  # GET -> all, POST -> add word
+    path("languages/", views.languages_view, name="languages"),  # GET -> all, POST -> add lang
     path("languages/<int:language_id>", views.delete_language, name="delete_language"),  # any -> delete lang
 
     path("<str:lang>/", views.index, name="index"),  # GET -> main menu
