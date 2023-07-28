@@ -1,3 +1,5 @@
+import random
+
 from django.utils import timezone
 from dictionary.models import Word, Translation
 
@@ -6,35 +8,54 @@ from ..util import get_words_for_practice
 
 class DirectText:
 
-    def __init__(self, context, question_direction):
+    def __init__(self, context):
         self.context = context
-        self.question_direction = question_direction
+        self.rand_translation_index = -1
 
     def ask(self):
         self.word = get_words_for_practice(self.context['lang'], 1)
-        # TODO question_direction to decide word (but keep word_id as is)
-        self.context['word'] = self.word
 
-    def check(self, word_id, answer):
+        if self.context['question_direction'] == 'from':
+            self.context['word'] = self.word
+        else:
+            translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
+            self.rand_translation_index = random.randint(0, len(translations) - 1)
+            self.context['word'] = translations[self.rand_translation_index]
+
+    def check(self, word_id, rand_translation_index, answer):
 
         word = Word.objects.get(pk=word_id)
-        translations = [_.target_word.word_text for _ in Translation.objects.filter(source_word=word.id)]
+        translations = [_.target_word for _ in Translation.objects.filter(source_word=word.id)]
+        translation_texts = [tr.word_text for tr in translations]
 
-        # TODO question_direction to decide comparison (but keep correct/mistake/last_practiced counter on word)
-        if answer in translations:
-            word.correct += 1
-            message = 'correct'
+        if self.context['question_direction'] == 'from':
+            if answer in translation_texts:
+                word.correct += 1
+                message = 'correct'
+            else:
+                word.mistakes += 1
+                message = 'incorrect'
         else:
-            word.mistakes += 1
-            message = 'incorrect'
+            if answer == word.word_text:
+                word.correct += 1
+                message = 'correct'
+            else:
+                word.mistakes += 1
+                message = 'incorrect'
 
         word.last_practiced = timezone.now()
         word.save()
 
-        self.context['word'] = word
+        if self.context['question_direction'] == 'from':
+            self.context['word'] = word
+        else:
+            self.context['word'] = translations[rand_translation_index]
+
         self.context['answer'] = answer
         self.context['message'] = message
 
-        # TODO question_direction reference word_text
-        self.context['message_additional'] = ' OR '.join(translations)
+        if self.context['question_direction'] == 'from':
+            self.context['message_additional'] = ' OR '.join(translation_texts)
+        else:
+            self.context['message_additional'] = word.word_text
 

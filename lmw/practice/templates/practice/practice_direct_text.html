@@ -5,18 +5,40 @@
 {% block content %}
 
 <script type="text/javascript">
+
+    function playAudio(audio_id) {
+        audio = audio_id ? document.getElementById(audio_id) : false;
+        if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
+    }
+
+    function handleKeyboard(e) {
+
+        // document events while the input for answer is in focus -> remember to delete the reserved keys from there!
+        if (e.key == 0) {
+            playAudio('{{ word.pronunciation|slice:':-4' }}');
+        }
+    }
+
+    function answerChanged(e) {
+        // delete reserved keys for document events
+        if (e.target.value.slice(-1) == '0') {      // reserved for playing audio, if any
+            e.target.value = e.target.value.slice(0, -1);
+        }
+    }
+
     {% if answer %}
     window.onload = function() {
         document.getElementById("next").focus();
+        document.addEventListener("keydown", handleKeyboard);
     }
     {% else %}
     window.onload = function() {
         document.getElementById("answer").focus();
+        document.addEventListener("keydown", handleKeyboard);
 
         try {
             document.getElementById("answer")
-                .addEventListener("keyup", function(event) {
-                    playAudio("audio");
+                .addEventListener("keydown", function(event) {
                     if (this.value != '') {
                         document.getElementById("check_answer").disabled = false;
                     }
@@ -25,10 +47,6 @@
     }
     {% endif %}
 
-    function playAudio(audio_id) {
-        audio = document.getElementById(audio_id);
-        if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
-    }
     function endPractice() {
         var end_input = document.createElement("input");
         end_input.setAttribute("type", "hidden");
@@ -73,22 +91,29 @@
     </div>
 
     <div id="practice_pane">
+
+        {% if question_direction == 'from' %}
+            <h4>Translate from {{ lang }}:</h4>
+        {% else %}
+            <h4>Translate to {{ lang }}</h4>
+        {% endif %}
+
         {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
-            <audio id="audio">
-                <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg">
+            <audio id="{{ word.pronunciation|slice:':-4' }}">
+                <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg" />
             </audio>
-            <button type="button" onclick="playAudio('audio')">
-                <img src="{% static 'dictionary/audio.jpg' %}" height="10">
+            <button type="button" onclick="playAudio('{{ word.pronunciation|slice:':-4' }}')">
+                <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
             </button>
         {% endif %}
 
         <label>{{ word.word_text }}</label>
         {% if answer %}
-        <input id="answer" type="text" value="{{ answer }}" disabled>
-        <input id="next" type="submit" value="Next">
+        <input id="answer" type="text" value="{{ answer }}" disabled />
+        <input id="next" type="submit" value="Next" />
         {% else %}
-        <input id="answer" type="text" name="answer" autocomplete="off">
-        <input id="check_answer" type="submit" value="Check answer" disabled>
+        <input id="answer" type="text" name="answer" onkeyup="answerChanged(event)" autocomplete="off" />
+        <input id="check_answer" type="submit" value="Check answer" disabled />
         {% endif %}
     </div>
 

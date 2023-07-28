@@ -59,9 +59,12 @@ def practice_view(request, lang=''):
                 # render question based on type
                 if request.session['question_type'] == 'direct_text':
 
-                    question = DirectText(context, request.session['question_direction'])
+                    context['question_direction'] = request.session['question_direction']
+
+                    question = DirectText(context)
                     question.ask()  # question picks the word and makes it into property
                     request.session['word_id'] = question.word.id
+                    request.session['rand_translation_index'] = question.rand_translation_index
 
                     return render(request, "practice/practice_direct_text.html", question.context)
 
@@ -71,8 +74,12 @@ def practice_view(request, lang=''):
 
                 if request.session['question_type'] == 'direct_text':
 
-                    answer = DirectText(context, request.session['question_direction'])
-                    answer.check(request.session['word_id'], request.POST['answer'])
+                    context['question_direction'] = request.session['question_direction']
+
+                    answer = DirectText(context)
+                    answer.check(request.session['word_id'],
+                                 request.session['rand_translation_index'],
+                                 request.POST['answer'])
 
                     return render(request, "practice/practice_direct_text.html", answer.context)
 
