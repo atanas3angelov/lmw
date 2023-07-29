@@ -41,7 +41,11 @@ def get_random_from(allowed_question_types):
 
 
 # TODO if only listening exercises are selected, filter words only for listening (else user sad :( )
-def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistaken=False, infrequently_practiced=False):
+def get_words_for_practice(lang: str, n: int,
+                           word_type=False,
+                           frequently_mistaken=False,
+                           infrequently_practiced=False,
+                           full_random=False):
     """
     get words based on specifications
     :param lang: language for which to return words
@@ -52,6 +56,8 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
     :param frequently_mistaken: set to True to prioritizes words where num of (mistakes - correct) attempts is highest
     :param infrequently_practiced: set to True to prioritizes words where last_practiced timestamp is the oldest
     (if both frequently_mistaken and infrequently_practiced are set to True infrequently_practiced has priority)
+    :param full_random: set to True returns entirely random words, but it can be slow (it's best for collecting the
+    'confusion words' for multiple choice questions
     :return: 1 word if n=1 or words list according to specifications, or raise InsufficientWordsError
     """
 
@@ -66,22 +72,25 @@ def get_words_for_practice(lang: str, n: int, word_type=False, frequently_mistak
     if word_type:
         words = words.filter(word_type=word_type)
 
-    if infrequently_practiced or frequently_mistaken:
+    if not full_random:
 
-        if infrequently_practiced:
+        if infrequently_practiced or frequently_mistaken:
+
+            if infrequently_practiced:
+                words = words.order_by('last_practiced')
+
+            if frequently_mistaken:
+                words = words.annotate(mc_diff=F('mistakes') - F('correct')).order_by('-mc_diff')
+
+        else:
+            # if no other criteria is given, then the order should be based on last_practiced ascending
+            # so that the backend can return different word to practice
+            # (biased on last_practiced, if not explicitly selected in order to avoid SQL heavy randomizing)
             words = words.order_by('last_practiced')
 
-        if frequently_mistaken:
-            words = words.annotate(mc_diff=F('mistakes') - F('correct')).order_by('-mc_diff')
-
     else:
-        # if no other criteria is given, then the order should be based on last_practiced ascending
-        # so that the backend can return different word to practice
-        # (biased on last_practiced, if not explicitly selected in order to avoid SQL heavy randomizing)
-        words = words.order_by('last_practiced')
-
-        # # order('?') can be slow -- figure out faster solution for not contiguous ids
-        # words = words.order_by('?')
+        # order('?') can be slow -- figure out faster solution for not contiguous ids
+        words = words.order_by('?')
 
         # random word with raw SQL
         # cursor = connection.cursor()

@@ -1,0 +1,187 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Practice {% endblock %}
+
+{% block content %}
+
+<script type="text/javascript">
+
+    function playAudio(audio_id) {
+        audio = audio_id ? document.getElementById(audio_id) : false;
+        if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
+    }
+
+    function answerChanged() {
+        document.getElementById("check_answer").disabled = false;
+    }
+
+    function handleKeyboard(e) {
+
+        if (e.key == 0) {
+            playAudio('{{ word.pronunciation|slice:':-4' }}');
+        }
+        {% if not answer %}
+            if (e.key == 1) {
+                const answer = document.getElementById('{{ other_words.0.id }}');
+                answer.focus()
+                answer.checked = true;
+                document.getElementById("check_answer").disabled = false;
+            }
+            if (e.key == 2) {
+                const answer = document.getElementById('{{ other_words.1.id }}');
+                answer.focus()
+                answer.checked = true;
+                document.getElementById("check_answer").disabled = false;
+            }
+            if (e.key == 3) {
+                const answer = document.getElementById('{{ other_words.2.id }}');
+                answer.focus()
+                answer.checked = true;
+                document.getElementById("check_answer").disabled = false;
+            }
+       {% endif %}
+    }
+
+    {% if answer %}
+    window.onload = function() {
+        document.getElementById("next").focus();
+        document.addEventListener("keydown", handleKeyboard);
+    }
+    {% else %}
+    window.onload = function() {
+        document.addEventListener("keydown", handleKeyboard);
+
+        try {
+            document.getElementById("answer")
+                .addEventListener("keydown", function(event) {
+                    if (this.value != '') {
+                        document.getElementById("check_answer").disabled = false;
+                    }
+            });
+        } catch (err) {}
+    }
+    {% endif %}
+
+    function endPractice() {
+        var end_input = document.createElement("input");
+        end_input.setAttribute("type", "hidden");
+        end_input.setAttribute("name", "end");
+        end_input.setAttribute("value", "End");
+
+        var form = document.getElementById('form_pane');
+        form.appendChild(end_input);
+
+        form.submit();
+    }
+</script>
+
+<style>
+    #form_pane {
+        width: 400px;
+        height: 300px;
+    }
+    #practice_pane {
+        padding-top: 10%;
+    }
+    #answer{
+        display: block;
+    }
+    .control {
+        float: right;
+    }
+    .correct {
+        color: green;
+    }
+    .incorrect {
+        color: red;
+    }
+</style>
+
+{% load static %}
+
+<form id="form_pane" action="{% url 'practice:practice' lang=lang %}" method="post">
+
+    <div class="control">
+        <input type="button" value="End" onclick="endPractice()" />
+    </div>
+
+    <div id="practice_pane">
+
+        {% if question_direction == 'from' %}
+            <h4>Translate from {{ lang }}:</h4>
+        {% else %}
+            <h4>Translate to {{ lang }}</h4>
+        {% endif %}
+
+        {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
+            <audio id="{{ word.pronunciation|slice:':-4' }}">
+                <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg" />
+            </audio>
+            <button type="button" onclick="playAudio('{{ word.pronunciation|slice:':-4' }}')">
+                <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
+            </button>
+        {% endif %}
+
+        <label>{{ word.word_text }}</label>
+        {% if answer %}
+            <input id="answer" type="text" value="{{ answer }}" disabled />
+            {% for possible_answer in other_words %}
+                <p>
+                    <input
+                        id="{{ possible_answer.id }}"
+                        type="radio"
+                        name="answer"
+                        value="{{ possible_answer.word_text }}"
+                        {% if possible_answer.word_text == answer %} checked {% endif %}
+                        disabled />
+                {% if possible_answer.pronunciation and possible_answer.pronunciation|slice:'-3:' == 'mp3' %}
+                    <audio id="{{ possible_answer.pronunciation|slice:':-4' }}">
+                        <source src="{% static 'dictionary/files/' %}{{ possible_answer.pronunciation }}" type="audio/mpeg" />
+                    </audio>
+                    <button type="button" onclick="playAudio('{{ possible_answer.pronunciation|slice:':-4' }}')">
+                        <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
+                    </button>
+                {% endif %}
+                    <label htmlFor="{{ possible_answer.id }}">
+                        {{ possible_answer.word_text }}
+                    </label>
+                </p>
+            {% endfor %}
+
+            <input id="next" type="submit" value="Next" />
+        {% else %}
+            {% for possible_answer in other_words %}
+                <p>
+                    <input
+                        id="{{ possible_answer.id }}"
+                        type="radio"
+                        name="answer"
+                        onchange="answerChanged()"
+                        value="{{ possible_answer.word_text }}" />
+                {% if possible_answer.pronunciation and possible_answer.pronunciation|slice:'-3:' == 'mp3' %}
+                    <audio id="{{ possible_answer.pronunciation|slice:':-4' }}">
+                        <source src="{% static 'dictionary/files/' %}{{ possible_answer.pronunciation }}" type="audio/mpeg" />
+                    </audio>
+                    <button type="button" onclick="playAudio('{{ possible_answer.pronunciation|slice:':-4' }}')">
+                        <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
+                    </button>
+                {% endif %}
+                    <label htmlFor="{{ possible_answer.id }}">
+                        {{ possible_answer.word_text }}
+                    </label>
+                </p>
+            {% endfor %}
+
+            <input id="check_answer" type="submit" value="Check answer" disabled />
+        {% endif %}
+    </div>
+
+    {% if answer %}
+    <p class="{{ message }}">{{ message }}</p>
+    <p class="{{ message }}">{{ message_additional }}</p>
+    {% endif %}
+
+    {% csrf_token %}
+</form>
+
+{% endblock %}

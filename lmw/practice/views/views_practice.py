@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from dictionary.views import get_lang_menu
 from ..util import get_allowed_question_types, get_random_from
-from ..questions.DirectText import DirectText
+from ..questions import DirectText, MultipleChoice
 
 
 def practice_view(request, lang=''):
@@ -68,6 +68,18 @@ def practice_view(request, lang=''):
 
                     return render(request, "practice/practice_direct_text.html", question.context)
 
+                elif request.session['question_type'] == 'multiple_choice':
+
+                    context['question_direction'] = request.session['question_direction']
+
+                    question = MultipleChoice(context)
+                    question.ask()  # question picks the word and makes it into property
+                    request.session['word_id'] = question.word.id
+                    request.session['rand_translation_index'] = question.rand_translation_index
+                    request.session['other_words_ids'] = question.other_words_ids
+
+                    return render(request, "practice/practice_multiple_choice.html", question.context)
+
                 # TODO do the rest question_type responses to set a question
 
             else:   # if answered, show check
@@ -79,6 +91,18 @@ def practice_view(request, lang=''):
                     answer = DirectText(context)
                     answer.check(request.session['word_id'],
                                  request.session['rand_translation_index'],
+                                 request.POST['answer'])
+
+                    return render(request, "practice/practice_direct_text.html", answer.context)
+
+                elif request.session['question_type'] == 'multiple_choice':
+
+                    context['question_direction'] = request.session['question_direction']
+
+                    answer = MultipleChoice(context)
+                    answer.check(request.session['word_id'],
+                                 request.session['rand_translation_index'],
+                                 request.session['other_words_ids'],
                                  request.POST['answer'])
 
                     return render(request, "practice/practice_direct_text.html", answer.context)
