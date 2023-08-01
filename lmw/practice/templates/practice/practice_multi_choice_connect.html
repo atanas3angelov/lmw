@@ -1,0 +1,224 @@
+{% extends "dictionary/base.html" %}
+
+{% block title %} Practice {% endblock %}
+
+{% block content %}
+
+<script type="text/javascript">
+
+    var connected = 0;
+    var connectedIds = [];
+
+    function playAudio(audio_id) {
+        audio = audio_id ? document.getElementById(audio_id) : false;
+        if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
+    }
+
+    function checkPair() {
+        let questionRadio = document.querySelector('input[name="question"]:checked');
+        let answerRadio = document.querySelector('input[name="answerConnect"]:checked');
+
+        if (questionRadio && answerRadio) {
+
+            let p = document.getElementById(questionRadio.value);
+            let inputs = p.getElementsByTagName('INPUT');
+
+            if (questionRadio.value == answerRadio.value) {
+                let correct = Number(inputs[2].value);
+                inputs[2].value = ++correct;
+
+                questionRadio.blur();
+                answerRadio.blur();
+                questionRadio.disabled = true;
+                answerRadio.disabled = true;
+                connected++;
+                connectedIds.push(Number(questionRadio.value));
+                connectedIds.push(Number(answerRadio.id));
+            }
+            else {
+                let mistakes = Number(inputs[3].value);
+                inputs[3].value = ++mistakes;
+            }
+            questionRadio.checked = false;
+            answerRadio.checked = false;
+        }
+
+        if (connected == 4)
+            document.getElementById("next").disabled = false;
+    }
+
+    function handleKeyboard(e) {
+
+        if (e.key == 1) {
+            if (!connectedIds.includes({{ words.0.id }})) {
+
+                const question_p = document.getElementById('{{ words.0.id }}');
+                const inputs = question_p.getElementsByTagName('INPUT');
+
+                const question_radio = inputs[0];
+                question_radio.focus();
+                question_radio.checked = true;
+
+                checkPair();
+            }
+        }
+        if (e.key == 2) {
+            if (!connectedIds.includes({{ words.1.id }})) {
+
+                const question_p = document.getElementById('{{ words.1.id }}');
+                const inputs = question_p.getElementsByTagName('INPUT');
+
+                const question_radio = inputs[0];
+                question_radio.focus();
+                question_radio.checked = true;
+
+                checkPair();
+            }
+        }
+        if (e.key == 3) {
+            if (!connectedIds.includes({{ words.2.id }})) {
+
+                const question_p = document.getElementById('{{ words.2.id }}');
+                const inputs = question_p.getElementsByTagName('INPUT');
+
+                const question_radio = inputs[0];
+                question_radio.focus();
+                question_radio.checked = true;
+
+                checkPair();
+            }
+        }
+        if (e.key == 4) {
+            if (!connectedIds.includes({{ words.3.id }})) {
+
+                const question_p = document.getElementById('{{ words.3.id }}');
+                const inputs = question_p.getElementsByTagName('INPUT');
+
+                const question_radio = inputs[0];
+                question_radio.focus();
+                question_radio.checked = true;
+
+                checkPair();
+            }
+        }
+    }
+
+    window.onload = function() {
+        document.addEventListener("keydown", handleKeyboard);
+    }
+
+    function endPractice() {
+        var end_input = document.createElement("input");
+        end_input.setAttribute("type", "hidden");
+        end_input.setAttribute("name", "end");
+        end_input.setAttribute("value", "End");
+
+        var form = document.getElementById('form_pane');
+        form.appendChild(end_input);
+
+        form.submit();
+    }
+</script>
+
+<style>
+    #form_pane {
+        width: 400px;
+        height: 300px;
+    }
+    #practice_pane {
+        padding-top: 10%;
+    }
+    #answer{
+        display: block;
+    }
+    .control {
+        float: right;
+    }
+    .correct {
+        color: green;
+    }
+    .incorrect {
+        color: red;
+    }
+</style>
+
+{% load static %}
+
+<form id="form_pane" action="{% url 'practice:practice' lang=lang %}" method="post">
+
+    <div class="control">
+        <input type="button" value="End" onclick="endPractice()" />
+    </div>
+
+    <div id="practice_pane">
+
+        <table>
+            <tr>
+                <td>
+                {% for word in words %}
+                    <p id="{{ word.id }}">
+                        <input
+                            type="radio"
+                            name="question"
+                            value="{{ word.id }}"
+                            onchange="checkPair()" />
+                    {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
+                        <audio id="{{ word.pronunciation|slice:':-4' }}">
+                            <source src="{% static 'dictionary/files/' %}{{ word.pronunciation }}" type="audio/mpeg" />
+                        </audio>
+                        <button type="button" onclick="playAudio('{{ word.pronunciation|slice:':-4' }}')">
+                            <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
+                        </button>
+                    {% endif %}
+                        <label>{{ word.word_text }}</label>
+                        <input
+                            id="word{{ forloop.counter }}_id"
+                            type="hidden"
+                            name="word{{ forloop.counter }}_id"
+                            value="{{ word.id }}" />
+                        <input
+                            id="word{{ forloop.counter }}_correct"
+                            type="hidden"
+                            name="word{{ forloop.counter }}_correct"
+                            value="{{ word.correct }}" />
+                        <input
+                            id="word{{ forloop.counter }}_mistakes"
+                            type="hidden"
+                            name="word{{ forloop.counter }}_mistakes"
+                            value="{{ word.mistakes }}" />
+                    </p>
+                {% endfor %}
+                </td>
+                <td>
+                {% for answer in answers %}
+                    <p>
+                        <input
+                            id="{{ answer.id }}"
+                            type="radio"
+                            name="answerConnect"
+                            onchange="checkPair()"
+                            value="{{ answer.word_id }}" />
+                    {% if answer.pronunciation and answer.pronunciation|slice:'-3:' == 'mp3' %}
+                        <audio id="{{ answer.pronunciation|slice:':-4' }}">
+                            <source src="{% static 'dictionary/files/' %}{{ answer.pronunciation }}" type="audio/mpeg" />
+                        </audio>
+                        <button type="button" onclick="playAudio('{{ answer.pronunciation|slice:':-4' }}')">
+                            <img src="{% static 'dictionary/audio.jpg' %}" height="10" />
+                        </button>
+                    {% endif %}
+                        <label for="{{ answer.id }}">
+                            {{ answer.word_text }}
+                        </label>
+                    </p>
+                {% endfor %}
+                </td>
+            </tr>
+        </table>
+
+        <input id="next" type="submit" value="Next" disabled />
+    </div>
+
+    {% csrf_token %}
+</form>
+
+{% endblock %}

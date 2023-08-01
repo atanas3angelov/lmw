@@ -123,7 +123,9 @@
         {% endif %}
 
         <label>{{ word.word_text }}</label>
+
         {% if answer %}
+<!-- TODO text into radio -->
             <input id="answer" type="text" value="{{ answer }}" disabled />
             {% for possible_answer in other_words %}
                 <p>

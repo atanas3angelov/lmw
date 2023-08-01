@@ -13,7 +13,10 @@ class DirectText:
         self.rand_translation_index = -1
 
     def ask(self):
-        self.word = get_words_for_practice(self.context['lang'], 1)
+        self.word = get_words_for_practice(self.context['lang'], 1,
+                                           None,
+                                           self.context['frequently_mistaken_words'],
+                                           self.context['infrequently_practiced_words'])
 
         if self.context['question_direction'] == 'from':
             self.context['word'] = self.word

@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from dictionary.views import get_lang_menu
 from ..util import get_allowed_question_types, get_random_from
-from ..questions import DirectText, MultipleChoice
+from ..questions import DirectText, MultipleChoice, MultiChoiceConnect
 
 
 def practice_view(request, lang=''):
@@ -44,6 +44,21 @@ def practice_view(request, lang=''):
             if request.session['word_num'] == 'fixed':
                 return render(request, "practice/practice_react.html", context)
 
+            # process answers from multiple_choice_connect - it doesn't have an answer check rendering
+            if request.POST.get('word1_id', False):
+
+                for i in range(1, 5):
+
+                    # TODO figure out a more efficient interaction with the db
+                    multi_choice_connect = MultiChoiceConnect(context)
+                    multi_choice_connect.update(request.POST.get('word' + str(i) + '_id'),
+                                                request.POST.get('word' + str(i) + '_correct'),
+                                                request.POST.get('word' + str(i) + '_mistakes'))
+
+            context['frequently_mistaken_words'] = request.session['frequently_mistaken_words']
+            context['infrequently_practiced_words'] = request.session['infrequently_practiced_words']
+            # TODO add more settings to context
+
             # word_num: unlimited -> do everything in backend
             # TODO guard/recover from browser refresh/back
             if not request.POST.get('answer', False):  # if no answer, ask a question
@@ -60,6 +75,7 @@ def practice_view(request, lang=''):
                 if request.session['question_type'] == 'direct_text':
 
                     context['question_direction'] = request.session['question_direction']
+                    # TODO add more settings to context
 
                     question = DirectText(context)
                     question.ask()  # question picks the word and makes it into property
@@ -71,6 +87,7 @@ def practice_view(request, lang=''):
                 elif request.session['question_type'] == 'multiple_choice':
 
                     context['question_direction'] = request.session['question_direction']
+                    # TODO add more settings to context
 
                     question = MultipleChoice(context)
                     question.ask()  # question picks the word and makes it into property
@@ -79,6 +96,17 @@ def practice_view(request, lang=''):
                     request.session['other_words_ids'] = question.other_words_ids
 
                     return render(request, "practice/practice_multiple_choice.html", question.context)
+
+                elif request.session['question_type'] == 'multiple_choice_connect':
+
+                    # TODO add more settings to context
+
+                    question = MultiChoiceConnect(context)
+                    question.ask()
+                    request.session['words_ids'] = question.words_ids
+                    request.session['answers_ids'] = question.answers_ids
+
+                    return render(request, "practice/practice_multi_choice_connect.html", question.context)
 
                 # TODO do the rest question_type responses to set a question
 
@@ -107,6 +135,7 @@ def practice_view(request, lang=''):
 
                     return render(request, "practice/practice_direct_text.html", answer.context)
 
+                # for multiple_choice_connect there is no rendering to check answer (it happens in js + separate JSON view?)
                 # TODO do the rest question_type responses to check an answer
 
     else:

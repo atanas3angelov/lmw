@@ -13,7 +13,11 @@ class MultipleChoice:
         self.rand_translation_index = -1
 
     def ask(self):
-        self.word = get_words_for_practice(self.context['lang'], 1)
+        self.word = get_words_for_practice(self.context['lang'], 1,
+                                           None,
+                                           self.context['frequently_mistaken_words'],
+                                           self.context['infrequently_practiced_words']
+                                           )
 
         translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
 
@@ -35,7 +39,7 @@ class MultipleChoice:
 
     def check(self, word_id, rand_translation_index, other_words_ids, answer):
 
-        # avoid making several calls to db by querying for all related word ids
+        # avoid making several calls to db by querying for all related word ids - translations (new query)
         all_related_word_ids = [word_id, *other_words_ids]
         all_related_words = Word.objects.filter(pk__in=all_related_word_ids)
 

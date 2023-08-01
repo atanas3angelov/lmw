@@ -112,7 +112,7 @@ def get_words_for_practice(lang: str, n: int,
     if n == 1:
         return words.first()
     else:
-        return words[:n]
+        return words[:n]  # direct SQL to model with "LIMIT n" will be faster
 
 
 def serialize_words(words, include_translations=True):
