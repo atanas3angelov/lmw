@@ -48,11 +48,11 @@
     }
 
     function handleKeyboard(e) {
+        {% for word in words %}
+        if (e.key == {{ forloop.counter }}) {
+            if (!connectedIds.includes({{ word.id }})) {
 
-        if (e.key == 1) {
-            if (!connectedIds.includes({{ words.0.id }})) {
-
-                const question_p = document.getElementById('{{ words.0.id }}');
+                const question_p = document.getElementById('{{ word.id }}');
                 const inputs = question_p.getElementsByTagName('INPUT');
 
                 const question_radio = inputs[0];
@@ -62,45 +62,7 @@
                 checkPair();
             }
         }
-        if (e.key == 2) {
-            if (!connectedIds.includes({{ words.1.id }})) {
-
-                const question_p = document.getElementById('{{ words.1.id }}');
-                const inputs = question_p.getElementsByTagName('INPUT');
-
-                const question_radio = inputs[0];
-                question_radio.focus();
-                question_radio.checked = true;
-
-                checkPair();
-            }
-        }
-        if (e.key == 3) {
-            if (!connectedIds.includes({{ words.2.id }})) {
-
-                const question_p = document.getElementById('{{ words.2.id }}');
-                const inputs = question_p.getElementsByTagName('INPUT');
-
-                const question_radio = inputs[0];
-                question_radio.focus();
-                question_radio.checked = true;
-
-                checkPair();
-            }
-        }
-        if (e.key == 4) {
-            if (!connectedIds.includes({{ words.3.id }})) {
-
-                const question_p = document.getElementById('{{ words.3.id }}');
-                const inputs = question_p.getElementsByTagName('INPUT');
-
-                const question_radio = inputs[0];
-                question_radio.focus();
-                question_radio.checked = true;
-
-                checkPair();
-            }
-        }
+        {% endfor %}
     }
 
     window.onload = function() {

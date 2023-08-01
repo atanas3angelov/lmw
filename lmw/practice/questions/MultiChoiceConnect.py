@@ -35,7 +35,6 @@ class MultiChoiceConnect:
 
         self.words_ids = [w.id for w in self.words]  # to be saved in session
 
-        # TODO shuffle answers + add word.id so that the pair can be identified
         self.answers = []
         for word in self.words:
             trs = word.translations.all()
