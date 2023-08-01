@@ -49,6 +49,7 @@ class MultiChoiceConnect:
 
         self.answers_ids = [a.id for a in self.answers]  # to be saved in session
 
+    # TODO? make into static (not a class method)
     def update(self, word_id, correct, mistakes):
         word = Word.objects.get(pk=word_id)
         word.correct = correct
