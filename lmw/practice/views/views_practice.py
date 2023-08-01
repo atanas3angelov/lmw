@@ -66,6 +66,10 @@ def practice_view(request, lang=''):
                 # decide translation direction if mixed selected
                 if request.session['translation_direction'] == 'mixed':
                     request.session['question_direction'] = get_random_from(['from', 'to'])
+                elif request.session['translation_direction'] == 'to':
+                    request.session['question_direction'] = 'to'
+                else:
+                    request.session['question_direction'] = 'from'
 
                 # decide next question type
                 allowed_question_types = get_allowed_question_types(request.session)
