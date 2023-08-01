@@ -21,24 +21,14 @@
             playAudio('{{ word.pronunciation|slice:':-4' }}');
         }
         {% if not answer %}
-            if (e.key == 1) {
-                const answer = document.getElementById('{{ other_words.0.id }}');
-                answer.focus()
-                answer.checked = true;
-                document.getElementById("check_answer").disabled = false;
-            }
-            if (e.key == 2) {
-                const answer = document.getElementById('{{ other_words.1.id }}');
-                answer.focus()
-                answer.checked = true;
-                document.getElementById("check_answer").disabled = false;
-            }
-            if (e.key == 3) {
-                const answer = document.getElementById('{{ other_words.2.id }}');
-                answer.focus()
-                answer.checked = true;
-                document.getElementById("check_answer").disabled = false;
-            }
+            {% for other_word in other_words %}
+                if (e.key == {{ forloop.counter }}) {
+                    const answer = document.getElementById('{{ other_word.id }}');
+                    answer.focus()
+                    answer.checked = true;
+                    document.getElementById("check_answer").disabled = false;
+                }
+            {% endfor %}
        {% endif %}
     }
 
