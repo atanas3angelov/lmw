@@ -55,6 +55,7 @@ def practice_view(request, lang=''):
                                                 request.POST.get('word' + str(i) + '_correct'),
                                                 request.POST.get('word' + str(i) + '_mistakes'))
 
+            context['word_type'] = request.session.get('word_type', None)
             context['frequently_mistaken_words'] = request.session['frequently_mistaken_words']
             context['infrequently_practiced_words'] = request.session['infrequently_practiced_words']
             context['redo_until_correct'] = request.session['redo_until_correct']
@@ -192,7 +193,7 @@ def set_session_ini_preferences(request):
 
     request.session['only_one_word_type'] = bool(request.POST.get('only_one_word_type', False))
 
-    if request.session:
+    if request.session.get('only_one_word_type', False):
         request.session['word_type'] = request.POST.get('word_type', 'n')
     # n / v / adj / adv / con / other
 

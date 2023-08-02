@@ -18,7 +18,7 @@ class DirectText:
             self.word = get_word_by_id(word_id)
         else:
             self.word = get_words_for_practice(self.context['lang'], 1,
-                                               None,
+                                               self.context['word_type'],
                                                self.context['frequently_mistaken_words'],
                                                self.context['infrequently_practiced_words'])
 

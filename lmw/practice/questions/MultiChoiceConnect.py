@@ -26,7 +26,7 @@ class MultiChoiceConnect:
         # self.words = Word.objects.raw("SELECT * FROM word WHERE language=%s LIMIT 4", [self.context['lang']])
 
         self.words = get_words_for_practice(self.context['lang'], 4,
-                                            None,
+                                            self.context['word_type'],
                                             self.context['frequently_mistaken_words'],
                                             self.context['infrequently_practiced_words']
                                             )
