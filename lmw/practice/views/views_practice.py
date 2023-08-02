@@ -60,8 +60,6 @@ def practice_view(request, lang=''):
             context['infrequently_practiced_words'] = request.session['infrequently_practiced_words']
             context['redo_until_correct'] = request.session['redo_until_correct']
 
-            # TODO add more settings to context
-
             # word_num: unlimited -> do everything in backend
             # TODO guard/recover from browser refresh/back
             if not request.POST.get('answer', False):  # if no answer, ask a question
@@ -88,7 +86,7 @@ def practice_view(request, lang=''):
 
                     context['question_direction'] = request.session['question_direction']
                     context['listening'] = True if request.session['question_type'] == 'listening' else False
-                    # TODO add more settings to context
+                    context['gender_oriented'] = request.session['gender_oriented']
 
                     question = DirectText(context)
                     question.ask(word_id)  # question picks the word and makes it into property or load from redo
@@ -103,7 +101,6 @@ def practice_view(request, lang=''):
                     context['question_direction'] = request.session['question_direction']
                     context['listening'] = True if request.session['question_type'] == 'listening_multiple_choice' \
                         else False
-                    # TODO add more settings to context
 
                     question = MultipleChoice(context)
                     question.ask(word_id)  # question picks the word and makes it into property or load from redo
@@ -128,11 +125,13 @@ def practice_view(request, lang=''):
                         request.session['question_type'] == 'listening':
 
                     context['question_direction'] = request.session['question_direction']
+                    context['gender_oriented'] = request.session['gender_oriented']
 
                     answer = DirectText(context)
                     correct = answer.check(request.session['word_id'],
                                            request.session['rand_translation_index'],
-                                           request.POST['answer'])
+                                           request.POST['answer'],
+                                           request.POST.get('gender', False))
 
                     # redo setting active -> save word_id in session to redo
                     if request.session['redo_until_correct'] and not correct:
@@ -209,4 +208,3 @@ def set_session_ini_preferences(request):
     request.session['listening_multiple_choice'] = bool(request.POST.get('listening_multiple_choice', False))
 
     request.session['redo_until_correct'] = bool(request.POST.get('redo_until_correct', False))
-

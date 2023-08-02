@@ -28,13 +28,17 @@ class DirectText:
             if self.context['listening'] and self.word.pronunciation:
                 self.word.word_text = "-" * len(self.word.word_text)
 
+            # only add gender oriented practice if translating from unknown language
+            if self.context['gender_oriented']:
+                self.context['genders'] = ['m', 'f', 'n']
+
             self.context['word'] = self.word
         else:
             translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
             self.rand_translation_index = random.randint(0, len(translations) - 1)
             self.context['word'] = translations[self.rand_translation_index]
 
-    def check(self, word_id, rand_translation_index, answer):
+    def check(self, word_id, rand_translation_index, answer, gender=False):
 
         word = Word.objects.get(pk=word_id)
         translations = [_.target_word for _ in Translation.objects.filter(source_word=word.id)]
@@ -43,12 +47,27 @@ class DirectText:
         # don't hide the word_text when checking answer (even for listening question type)
 
         if self.context['question_direction'] == 'from':
-            if answer in translation_texts:
-                word.correct += 1
-                message = 'correct'
+
+            if self.context['gender_oriented']:
+
+                if answer in translation_texts and word.gender == gender:
+                    word.correct += 1
+                    message = 'correct'
+                else:
+                    word.mistakes += 1
+                    message = 'incorrect'
+
+                self.context['gender_answer'] = gender
+                self.context['highlighted'] = word.gender
+
             else:
-                word.mistakes += 1
-                message = 'incorrect'
+
+                if answer in translation_texts:
+                    word.correct += 1
+                    message = 'correct'
+                else:
+                    word.mistakes += 1
+                    message = 'incorrect'
         else:
             if answer == word.word_text:
                 word.correct += 1

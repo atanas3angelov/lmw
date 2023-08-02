@@ -24,7 +24,7 @@
             {% for other_word in other_words %}
                 if (e.key == {{ forloop.counter }}) {
                     const answer = document.getElementById('{{ other_word.id }}');
-                    answer.focus()
+                    answer.focus();
                     answer.checked = true;
                     document.getElementById("check_answer").disabled = false;
                 }

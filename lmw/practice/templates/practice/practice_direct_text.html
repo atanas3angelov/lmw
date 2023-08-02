@@ -19,12 +19,36 @@
         if (e.key == 0) {
             playAudio('{{ word.pronunciation|slice:':-4' }}');
         }
+
+        {% if not answer and gender_oriented and question_direction == 'from' %}
+            {% for gender in genders %}
+                if (e.key == {{ forloop.counter }}) {
+                    const gender_answer = document.getElementById('{{ gender }}');
+                    gender_answer.checked = true;
+
+                    genderChanged();
+                }
+            {% endfor %}
+       {% endif %}
     }
 
     function answerChanged(e) {
         // delete reserved keys for document events
         if (e.target.value.slice(-1) == '0') {      // reserved for playing audio, if any
             e.target.value = e.target.value.slice(0, -1);
+        }
+
+        for (let i = 1; i <= 3; i++) {
+            if (e.target.value.slice(-1) == i) {    // reserved for switching gender, if gender oriented practice
+                e.target.value = e.target.value.slice(0, -1);
+            }
+        }
+    }
+
+    function genderChanged(e) {
+        // decide to enable check button if answer not blank
+        if (document.getElementById("answer").value != '') {
+            document.getElementById("check_answer").disabled = false;
         }
     }
 
@@ -41,9 +65,16 @@
         try {
             document.getElementById("answer")
                 .addEventListener("keydown", function(event) {
-                    if (this.value != '') {
-                        document.getElementById("check_answer").disabled = false;
-                    }
+                    {% if gender_oriented and question_direction == 'from' %}
+                        if (this.value != '' && document.querySelector('input[name="gender"]:checked') &&
+                                document.querySelector('input[name="gender"]:checked').value) {
+                            document.getElementById("check_answer").disabled = false;
+                        }
+                    {% else %}
+                        if (this.value != '') {
+                            document.getElementById("check_answer").disabled = false;
+                        }
+                    {% endif %}
             });
         } catch (err) {}
     }
@@ -82,6 +113,18 @@
     .incorrect {
         color: red;
     }
+    .male {
+        color: white;
+        background-color:rgb(0,0,200);
+    }
+    .female {
+        color: white;
+        background-color:rgb(255,0,0);
+    }
+    .neutral {
+        color: white;
+        background-color:rgb(125,125,125);
+    }
 </style>
 
 {% load static %}
@@ -95,9 +138,13 @@
     <div id="practice_pane">
 
         {% if question_direction == 'from' %}
-            <h4>Translate from {{ lang }}:</h4>
+            {% if gender_oriented %}
+                <h4>Translate from {{ lang }} and pick gender:</h4>
+            {% else %}
+                <h4>Translate from {{ lang }}:</h4>
+            {% endif %}
         {% else %}
-            <h4>Translate to {{ lang }}</h4>
+            <h4>Translate to {{ lang }}:</h4>
         {% endif %}
 
         {% if word.pronunciation and word.pronunciation|slice:'-3:' == 'mp3' %}
@@ -110,6 +157,41 @@
         {% endif %}
 
         <label>{{ word.word_text }}</label>
+
+        {% if gender_oriented and question_direction == 'from' %}
+            <!--only add gender oriented practice if translating from unknown language-->
+            <input
+                id='m'
+                type='radio'
+                name='gender'
+                value='m'
+                onchange="genderChanged(event)"
+                onclick="document.getElementById('answer').focus()"
+                {% if answer and gender_answer == 'm' %}checked{% endif %}
+                {% if answer %} disabled {% endif %} />
+            <label for='m' class={% if highlighted == 'm' %}'male'{% else %} '' {% endif %}>male</label>
+            <input
+                id='f'
+                type='radio'
+                name='gender'
+                value='f'
+                onchange="genderChanged(event)"
+                onclick="document.getElementById('answer').focus()"
+                {% if answer and gender_answer == 'f' %}checked{% endif %}
+                {% if answer %} disabled {% endif %} />
+            <label for='f' class={% if highlighted == 'f' %}'female'{% else %} '' {% endif %}>female</label>
+            <input
+                id='n'
+                type='radio'
+                name='gender'
+                value='n'
+                onchange="genderChanged(event)"
+                onclick="document.getElementById('answer').focus()"
+                {% if answer and gender_answer == 'n' %}checked{% endif %}
+                {% if answer %} disabled {% endif %} />
+            <label for='n' class={% if highlighted == 'n' %}'neutral'{% else %} '' {% endif %}>neutral</label>
+        {% endif %}
+
         {% if answer %}
         <input id="answer" type="text" value="{{ answer }}" disabled />
         <input id="next" type="submit" value="Next" />
