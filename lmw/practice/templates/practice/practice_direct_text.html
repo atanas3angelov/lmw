@@ -9,6 +9,8 @@
     function playAudio(audio_id) {
         audio = audio_id ? document.getElementById(audio_id) : false;
         if (!!audio) audio.play().catch(err => {console.warn('not allowed to play audio')});
+        // re-focus answer input after playing audio
+        document.getElementById("answer").focus();
     }
 
     function handleKeyboard(e) {

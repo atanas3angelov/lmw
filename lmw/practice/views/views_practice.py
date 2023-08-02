@@ -57,6 +57,8 @@ def practice_view(request, lang=''):
 
             context['frequently_mistaken_words'] = request.session['frequently_mistaken_words']
             context['infrequently_practiced_words'] = request.session['infrequently_practiced_words']
+            context['redo_until_correct'] = request.session['redo_until_correct']
+
             # TODO add more settings to context
 
             # word_num: unlimited -> do everything in backend
@@ -73,26 +75,37 @@ def practice_view(request, lang=''):
                 allowed_question_types = get_allowed_question_types(request.session)
                 request.session['question_type'] = get_random_from(allowed_question_types)
 
+                # redo setting active -> retrieve word_id from session to redo
+                if request.session['redo_until_correct'] and request.session.get('redo_id', False):
+                    word_id = request.session['redo_id']
+                else:
+                    word_id = None
+
                 # render question based on type
-                if request.session['question_type'] == 'direct_text':
+                if request.session['question_type'] == 'direct_text' or \
+                        request.session['question_type'] == 'listening':
 
                     context['question_direction'] = request.session['question_direction']
+                    context['listening'] = True if request.session['question_type'] == 'listening' else False
                     # TODO add more settings to context
 
                     question = DirectText(context)
-                    question.ask()  # question picks the word and makes it into property
+                    question.ask(word_id)  # question picks the word and makes it into property or load from redo
                     request.session['word_id'] = question.word.id
                     request.session['rand_translation_index'] = question.rand_translation_index
 
                     return render(request, "practice/practice_direct_text.html", question.context)
 
-                elif request.session['question_type'] == 'multiple_choice':
+                elif request.session['question_type'] == 'multiple_choice' or \
+                        request.session['question_type'] == 'listening_multiple_choice':
 
                     context['question_direction'] = request.session['question_direction']
+                    context['listening'] = True if request.session['question_type'] == 'listening_multiple_choice' \
+                        else False
                     # TODO add more settings to context
 
                     question = MultipleChoice(context)
-                    question.ask()  # question picks the word and makes it into property
+                    question.ask(word_id)  # question picks the word and makes it into property or load from redo
                     request.session['word_id'] = question.word.id
                     request.session['rand_translation_index'] = question.rand_translation_index
                     request.session['other_words_ids'] = question.other_words_ids
@@ -101,8 +114,6 @@ def practice_view(request, lang=''):
 
                 elif request.session['question_type'] == 'multiple_choice_connect':
 
-                    # TODO add more settings to context
-
                     question = MultiChoiceConnect(context)
                     question.ask()
                     request.session['words_ids'] = question.words_ids
@@ -110,35 +121,51 @@ def practice_view(request, lang=''):
 
                     return render(request, "practice/practice_multi_choice_connect.html", question.context)
 
-                # TODO do the rest question_type responses to set a question
-
             else:   # if answered, show check
 
-                if request.session['question_type'] == 'direct_text':
+                if request.session['question_type'] == 'direct_text' or \
+                        request.session['question_type'] == 'listening':
 
                     context['question_direction'] = request.session['question_direction']
 
                     answer = DirectText(context)
-                    answer.check(request.session['word_id'],
-                                 request.session['rand_translation_index'],
-                                 request.POST['answer'])
+                    correct = answer.check(request.session['word_id'],
+                                           request.session['rand_translation_index'],
+                                           request.POST['answer'])
+
+                    # redo setting active -> save word_id in session to redo
+                    if request.session['redo_until_correct'] and not correct:
+                        request.session['redo_id'] = request.session['word_id']
+                    else:
+                        if request.session.get('redo_id', False):
+                            del request.session['redo_id']
 
                     return render(request, "practice/practice_direct_text.html", answer.context)
 
-                elif request.session['question_type'] == 'multiple_choice':
+                elif request.session['question_type'] == 'multiple_choice' or \
+                        request.session['question_type'] == 'listening_multiple_choice':
 
                     context['question_direction'] = request.session['question_direction']
 
                     answer = MultipleChoice(context)
-                    answer.check(request.session['word_id'],
-                                 request.session['rand_translation_index'],
-                                 request.session['other_words_ids'],
-                                 request.POST['answer'])
+                    correct = answer.check(request.session['word_id'],
+                                           request.session['rand_translation_index'],
+                                           request.session['other_words_ids'],
+                                           request.POST['answer'])
+
+                    # redo setting active -> save word_id in session to redo
+                    if request.session['redo_until_correct'] and not correct:
+                        request.session['redo_id'] = request.session['word_id']
+                    else:
+                        if request.session.get('redo_id', False):
+                            del request.session['redo_id']
 
                     return render(request, "practice/practice_direct_text.html", answer.context)
 
-                # for multiple_choice_connect there is no rendering to check answer (it happens in js + separate JSON view?)
-                # TODO do the rest question_type responses to check an answer
+                # for multiple_choice_connect no check answer rendering (it happens in js), but
+                # processing of answers from multiple_choice_connect happens before checking for answer (top)
+                # the redo for multiple_choice_connect is also unnecessary since
+                #   next button is activated when all are answered correctly at least once (similar to redo)
 
     else:
         # session clean-up before starting new one

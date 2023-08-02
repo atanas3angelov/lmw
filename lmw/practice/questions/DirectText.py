@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from dictionary.models import Word, Translation
 
-from ..util import get_words_for_practice
+from ..util import get_words_for_practice, get_word_by_id
 
 
 class DirectText:
@@ -12,13 +12,22 @@ class DirectText:
         self.context = context
         self.rand_translation_index = -1
 
-    def ask(self):
-        self.word = get_words_for_practice(self.context['lang'], 1,
-                                           None,
-                                           self.context['frequently_mistaken_words'],
-                                           self.context['infrequently_practiced_words'])
+    def ask(self, word_id=None):
+
+        if self.context['redo_until_correct'] and word_id:
+            self.word = get_word_by_id(word_id)
+        else:
+            self.word = get_words_for_practice(self.context['lang'], 1,
+                                               None,
+                                               self.context['frequently_mistaken_words'],
+                                               self.context['infrequently_practiced_words'])
 
         if self.context['question_direction'] == 'from':
+
+            # only hide the word_text for unfamiliar language (when there is audio for it)
+            if self.context['listening'] and self.word.pronunciation:
+                self.word.word_text = "-" * len(self.word.word_text)
+
             self.context['word'] = self.word
         else:
             translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
@@ -30,6 +39,8 @@ class DirectText:
         word = Word.objects.get(pk=word_id)
         translations = [_.target_word for _ in Translation.objects.filter(source_word=word.id)]
         translation_texts = [tr.word_text for tr in translations]
+
+        # don't hide the word_text when checking answer (even for listening question type)
 
         if self.context['question_direction'] == 'from':
             if answer in translation_texts:
@@ -62,3 +73,4 @@ class DirectText:
         else:
             self.context['message_additional'] = word.word_text
 
+        return True if message == 'correct' else False

@@ -115,6 +115,10 @@ def get_words_for_practice(lang: str, n: int,
         return words[:n]  # direct SQL to model with "LIMIT n" will be faster
 
 
+def get_word_by_id(word_id):
+    return Word.objects.get(pk=word_id)
+
+
 def serialize_words(words, include_translations=True):
 
     words_json = []

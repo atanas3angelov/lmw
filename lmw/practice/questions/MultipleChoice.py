@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from dictionary.models import Word, Translation
 
-from ..util import get_words_for_practice
+from ..util import get_words_for_practice, get_word_by_id
 
 
 class MultipleChoice:
@@ -12,16 +12,24 @@ class MultipleChoice:
         self.context = context
         self.rand_translation_index = -1
 
-    def ask(self):
-        self.word = get_words_for_practice(self.context['lang'], 1,
-                                           None,
-                                           self.context['frequently_mistaken_words'],
-                                           self.context['infrequently_practiced_words']
-                                           )
+    def ask(self, word_id):
+
+        if self.context['redo_until_correct'] and word_id:
+            self.word = get_word_by_id(word_id)
+        else:
+            self.word = get_words_for_practice(self.context['lang'], 1,
+                                               None,
+                                               self.context['frequently_mistaken_words'],
+                                               self.context['infrequently_practiced_words'])
 
         translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
 
         if self.context['question_direction'] == 'from':
+
+            # only hide the word_text for unfamiliar language (when there is audio for it)
+            if self.context['listening'] and self.word.pronunciation:
+                self.word.word_text = "-" * len(self.word.word_text)
+
             self.context['word'] = self.word
         else:
             self.rand_translation_index = random.randint(0, len(translations) - 1)
@@ -42,6 +50,8 @@ class MultipleChoice:
         # avoid making several calls to db by querying for all related word ids - translations (new query)
         all_related_word_ids = [word_id, *other_words_ids]
         all_related_words = Word.objects.filter(pk__in=all_related_word_ids)
+
+        # don't hide the word_text when checking answer (even for listening question type)
 
         other_words = []
         # loop through results to find word and re-establish original order of other_words
@@ -90,3 +100,4 @@ class MultipleChoice:
         else:
             self.context['message_additional'] = word.word_text
 
+        return True if message == 'correct' else False
