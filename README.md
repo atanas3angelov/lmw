@@ -35,14 +35,14 @@ screenshots of main functionality:
 ![alt text](https://github.com/atanas3angelov/lmw/blob/main/practice_setup.jpg?raw=true)
 
 5. direct text exercise
-![alt text](https://github.com/atanas3angelov/lmw/blob/main/direct_text.jpg?raw=true)
-hidden keys: 0-plays audio for word (1-3 - selects gender radio, if exercise allows it)
+![alt text](https://github.com/atanas3angelov/lmw/blob/main/direct_text.jpg?raw=true)  
+hidden keys: 0-plays audio for word (1-3 - selects gender radio, if exercise allows it)  
 
 6. multiple choice exercise
-![alt text](https://github.com/atanas3angelov/lmw/blob/main/multiple_choice.jpg?raw=true)
-hidden keys: 0-plays audio for word, 1-3 - selects answer radio
+![alt text](https://github.com/atanas3angelov/lmw/blob/main/multiple_choice.jpg?raw=true)  
+hidden keys: 0-plays audio for word, 1-3 - selects answer radio  
 
 7. multiple choice connect exercise
-![alt text](https://github.com/atanas3angelov/lmw/blob/main/multi_choice_connect.jpg?raw=true)
-hidden keys: 1-4 - selects left word radio
+![alt text](https://github.com/atanas3angelov/lmw/blob/main/multi_choice_connect.jpg?raw=true)  
+hidden keys: 1-4 - selects left word radio  
 
