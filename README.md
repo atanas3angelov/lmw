@@ -18,8 +18,8 @@ The functionality can be separated into 2 main parts:
 - dictionary (add, view, edit words in dictionary)  
 - practice (set up a practice session and practice)  
 
-If fixed amount of words is selected as practice setup, the react frontend is activated.  
-If unlimited words is selected as practice setup, everything happens in the backend (with django's templating language).  
+If fixed amount of words is selected in practice setup, the react frontend is activated.  
+If unlimited words is selected in practice setup, everything happens in the backend (with django's templating language).  
 
 screenshots of main functionality:
 1. main menu (http://localhost:8000/dictionary/)
