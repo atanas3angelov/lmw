@@ -15,10 +15,10 @@ IDE: PyCharm Community, VSCode
 Target OS: Windows  
 
 The functionality can be separated into 2 main parts:
-- dictionary (add, view, edit words to dictionary)  
+- dictionary (add, view, edit words in dictionary)  
 - practice (set up a practice session and practice)  
 
-If fixed amount of words is selected as practice setup, the react frontend.  
+If fixed amount of words is selected as practice setup, the react frontend is activated.  
 If unlimited words is selected as practice setup, everything happens in the backend (with django's templating language).  
 
 screenshots of main functionality:
