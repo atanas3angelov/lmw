@@ -47,24 +47,21 @@ class MultipleChoice:
 
     def check(self, word_id, rand_translation_index, other_words_ids, answer):
 
-        # avoid making several calls to db by querying for all related word ids - translations (new query)
-        all_related_word_ids = [word_id, *other_words_ids]
-        all_related_words = Word.objects.filter(pk__in=all_related_word_ids)
+        word = Word.objects.get(pk=word_id)
+
+        related_words = Word.objects.filter(pk__in=other_words_ids)
 
         # don't hide the word_text when checking answer (even for listening question type)
 
+        # re-establish original order of other_words
         other_words = []
-        # loop through results to find word and re-establish original order of other_words
-        for i in range(len(all_related_word_ids)):
-            for rw in all_related_words:
-                if rw.id == word_id:
-                    word = rw
-                    break
-                elif rw.id == all_related_word_ids[i]:
+        for owi in other_words_ids:
+            for rw in related_words:
+                if owi == rw.id:
                     other_words.append(rw)
                     break
 
-        translations = [_.target_word for _ in Translation.objects.filter(source_word=word.id)]
+        translations = [_.target_word for _ in Translation.objects.filter(source_word=word_id)]
         translation_texts = [tr.word_text for tr in translations]
 
         if self.context['question_direction'] == 'from':
@@ -74,6 +71,7 @@ class MultipleChoice:
             else:
                 word.mistakes += 1
                 message = 'incorrect'
+            self.context['correct_ids'] = [tr.id for tr in translations]    # used to mark correct radio
         else:
             if answer == word.word_text:
                 word.correct += 1
@@ -81,6 +79,7 @@ class MultipleChoice:
             else:
                 word.mistakes += 1
                 message = 'incorrect'
+            self.context['correct_ids'] = [word.id]     # used to mark correct radio
 
         word.last_practiced = timezone.now()
         word.save()

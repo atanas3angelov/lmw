@@ -160,7 +160,7 @@ def practice_view(request, lang=''):
                         if request.session.get('redo_id', False):
                             del request.session['redo_id']
 
-                    return render(request, "practice/practice_direct_text.html", answer.context)
+                    return render(request, "practice/practice_multiple_choice.html", answer.context)
 
                 # for multiple_choice_connect no check answer rendering (it happens in js), but
                 # processing of answers from multiple_choice_connect happens before checking for answer (top)

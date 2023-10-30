@@ -115,10 +115,13 @@
         <label>{{ word.word_text }}</label>
 
         {% if answer %}
-<!-- TODO text into radio -->
-            <input id="answer" type="text" value="{{ answer }}" disabled />
+
             {% for possible_answer in other_words %}
-                <p>
+                <p
+                    {% if correct_ids and possible_answer.id in correct_ids %}
+                    class="{{ message }}"
+                    {% endif %}
+                >
                     <input
                         id="{{ possible_answer.id }}"
                         type="radio"
