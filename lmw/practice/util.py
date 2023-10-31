@@ -40,12 +40,12 @@ def get_random_from(allowed_question_types):
     return allowed_question_types[r]
 
 
-# TODO if only listening exercises are selected, filter words only for listening (else user sad :( )
 def get_words_for_practice(lang: str, n: int,
                            word_type=False,
                            frequently_mistaken=False,
                            infrequently_practiced=False,
-                           full_random=False):
+                           full_random=False,
+                           listening_only=False):
     """
     get words based on specifications
     :param lang: language for which to return words
@@ -58,6 +58,7 @@ def get_words_for_practice(lang: str, n: int,
     (if both frequently_mistaken and infrequently_practiced are set to True infrequently_practiced has priority)
     :param full_random: set to True returns entirely random words, but it can be slow (it's best for collecting the
     'confusion words' for multiple choice questions
+    :param listening_only: set to True returns only words with pronunciation
     :return: 1 word if n=1 or words list according to specifications, or raise InsufficientWordsError
     """
 
@@ -71,6 +72,9 @@ def get_words_for_practice(lang: str, n: int,
 
     if word_type:
         words = words.filter(word_type=word_type)
+
+    if listening_only:
+        words = words.exclude(pronunciation__exact='')
 
     if not full_random:
 
@@ -107,7 +111,15 @@ def get_words_for_practice(lang: str, n: int,
         # word = cursor.fetchone()
 
     if len(words) < n:
-        raise InsufficientWordsError(f'available {len(words)}, asked {n}: lang {lang} only of type {word_type}')
+        word_type_message = word_type if word_type else 'any'
+
+        if listening_only:
+            err_message = f'available {len(words)} with pronunciation, ' \
+                          f'asked {n}: lang {lang} only of type {word_type_message}'
+        else:
+            err_message = f'available {len(words)}, ' \
+                          f'asked {n}: lang {lang} only of type {word_type_message}'
+        raise InsufficientWordsError(err_message)
 
     if n == 1:
         return words.first()
