@@ -9,7 +9,7 @@ from django.conf import settings
 from dictionary.views import files_dir
 from dictionary.models import Word
 from ..exceptions.InsufficientWordsError import InsufficientWordsError
-from ..util import get_words_for_practice, serialize_words
+from ..util import get_words_for_practice, serialize_words, get_allowed_question_types
 
 
 def react_view(request):
@@ -21,11 +21,15 @@ def react_view(request):
         }
 
         try:
+            allowed_question_types = get_allowed_question_types(request.session)
+            listening_only = set(allowed_question_types).issubset({'listening', 'listening_multiple_choice'})
+
             words = get_words_for_practice(request.session['lang'],
                                            request.session['fixed_word_num'],
                                            request.session['word_type'] if request.session['only_one_word_type'] else False,
                                            request.session['frequently_mistaken_words'],
-                                           request.session['infrequently_practiced_words'])
+                                           request.session['infrequently_practiced_words'],
+                                           listening_only=listening_only)
 
             data['words'] = serialize_words(words)
 

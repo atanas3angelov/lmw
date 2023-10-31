@@ -20,7 +20,8 @@ class DirectText:
             self.word = get_words_for_practice(self.context['lang'], 1,
                                                self.context['word_type'],
                                                self.context['frequently_mistaken_words'],
-                                               self.context['infrequently_practiced_words'])
+                                               self.context['infrequently_practiced_words'],
+                                               listening_only=self.context['listening'])
 
         if self.context['question_direction'] == 'from':
 

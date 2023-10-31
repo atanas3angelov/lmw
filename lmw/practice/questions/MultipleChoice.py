@@ -20,7 +20,8 @@ class MultipleChoice:
             self.word = get_words_for_practice(self.context['lang'], 1,
                                                self.context['word_type'],
                                                self.context['frequently_mistaken_words'],
-                                               self.context['infrequently_practiced_words'])
+                                               self.context['infrequently_practiced_words'],
+                                               listening_only=self.context['listening'])
 
         translations = [_.target_word for _ in Translation.objects.filter(source_word=self.word.id)]
 
@@ -37,17 +38,19 @@ class MultipleChoice:
 
         rand_correct_index = random.randint(0, 2)
         if self.context['question_direction'] == 'from':
-            self.context['other_words'] = get_words_for_practice(lang='origin', n=2, full_random=True)
+            self.context['other_words'] = get_words_for_practice(lang='origin', n=2, full_random=True,
+                                                                 listening_only=self.context['listening'])
             self.context['other_words'].insert(rand_correct_index, translations[self.rand_translation_index])
         else:
-            self.context['other_words'] = get_words_for_practice(lang=self.context['lang'], n=2, full_random=True)
+            self.context['other_words'] = get_words_for_practice(lang=self.context['lang'], n=2, full_random=True,
+                                                                 listening_only=self.context['listening'])
             self.context['other_words'].insert(rand_correct_index, self.word)
 
         self.other_words_ids = [ow.id for ow in self.context['other_words']]
 
     def check(self, word_id, rand_translation_index, other_words_ids, answer):
 
-        word = Word.objects.get(pk=word_id)
+        word = get_word_by_id(word_id)
 
         related_words = Word.objects.filter(pk__in=other_words_ids)
 
