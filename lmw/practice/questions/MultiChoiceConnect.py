@@ -12,18 +12,6 @@ class MultiChoiceConnect:
         self.context = context
 
     def ask(self):
-        # TODO figure out whether words and related translations can be collected with 1 query
-        # tried prefetch_related(), select_related(), Manager.raw(), and even tried pure SQL (but can't use LIMIT on 1):
-        # SELECT w.word_text, w2.word_text
-        # FROM word w
-        # JOIN translation tr ON tr.source_word_id = w.id
-        # JOIN word w2 ON tr.target_word_id = w2.id
-        # WHERE w.id IN
-        #     (SELECT source_word_id
-        #     FROM translation)
-
-        # TODO related words must conform to section 'What words to include in practice' (get_words_for_practice)
-        # self.words = Word.objects.raw("SELECT * FROM word WHERE language=%s LIMIT 4", [self.context['lang']])
 
         self.words = get_words_for_practice(self.context['lang'], 4,
                                             self.context['word_type'],
